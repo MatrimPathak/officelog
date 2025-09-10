@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget colors - Light theme -->
+    <color name="widget_background_light">#F6F7FB</color>
+    <color name="widget_surface_light">#FFFFFF</color>
+    <color name="widget_text_primary_light">#0B1A2B</color>
+    <color name="widget_text_secondary_light">#9E9E9E</color>
+    <color name="widget_primary_light">#1565C0</color>
+    <color name="widget_accent_light">#FFC107</color>
+    <color name="widget_success_light">#2E7D32</color>
+    <color name="widget_error_light">#D32F2F</color>
+
+    <!-- Widget colors - Dark theme -->
+    <color name="widget_background_dark">#121212</color>
+    <color name="widget_surface_dark">#1E1E1E</color>
+    <color name="widget_text_primary_dark">#E6EEF9</color>
+    <color name="widget_text_secondary_dark">#757575</color>
+    <color name="widget_primary_dark">#4F8FEF</color>
+    <color name="widget_accent_dark">#FFD54F</color>
+    <color name="widget_success_dark">#66BB6A</color>
+    <color name="widget_error_dark">#EF5350</color>
+
+    <!-- Default widget colors (will be used by system) -->
+    <color name="widget_background">@color/widget_background_light</color>
+    <color name="widget_surface">@color/widget_surface_light</color>
+    <color name="widget_text_primary">@color/widget_text_primary_light</color>
+    <color name="widget_text_secondary">@color/widget_text_secondary_light</color>
+    <color name="widget_primary">@color/widget_primary_light</color>
+    <color name="widget_accent">@color/widget_accent_light</color>
+    <color name="widget_success">@color/widget_success_light</color>
+    <color name="widget_error">@color/widget_error_light</color>
+</resources>

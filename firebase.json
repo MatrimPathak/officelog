@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"pega-attendence","appId":"1:89886471430:android:0daf63b7dc13a70af75a87","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"pega-attendence","configurations":{"android":"1:89886471430:android:0daf63b7dc13a70af75a87","ios":"1:89886471430:ios:97fd9294bbf99fccf75a87"}}}}}}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme widget colors -->
+    <color name="widget_background">@color/widget_background_dark</color>
+    <color name="widget_surface">@color/widget_surface_dark</color>
+    <color name="widget_text_primary">@color/widget_text_primary_dark</color>
+    <color name="widget_text_secondary">@color/widget_text_secondary_dark</color>
+    <color name="widget_primary">@color/widget_primary_dark</color>
+    <color name="widget_accent">@color/widget_accent_dark</color>
+    <color name="widget_success">@color/widget_success_dark</color>
+    <color name="widget_error">@color/widget_error_dark</color>
+</resources>
