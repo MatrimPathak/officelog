@@ -43,10 +43,10 @@ chmod +x verify-github-actions.sh
 
 #### ⚠️ Important Security Notes
 
-- The `google-services.json` file contains your Firebase configuration
-- This file is necessary for Firebase services to work
-- Keep your Firebase project permissions restricted
-- Consider using Firebase App Check for additional security
+-   The `google-services.json` file contains your Firebase configuration
+-   This file is necessary for Firebase services to work
+-   Keep your Firebase project permissions restricted
+-   Consider using Firebase App Check for additional security
 
 ### Step 2: Verify Workflow File
 
