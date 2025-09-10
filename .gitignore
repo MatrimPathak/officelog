@@ -53,3 +53,9 @@ app.*.map.json
 
 # Generated files
 /android/key.properties
+
+# Environment variables
+.env
+config.env
+*.env
+!.env.example

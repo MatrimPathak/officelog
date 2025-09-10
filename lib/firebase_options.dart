@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -46,30 +47,30 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'your-web-api-key',
-    appId: 'your-web-app-id',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'your-project-id',
-    authDomain: 'your-project-id.firebaseapp.com',
-    storageBucket: 'your-project-id.appspot.com',
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? 'your-web-api-key',
+    appId: dotenv.env['FIREBASE_WEB_APP_ID'] ?? 'your-web-app-id',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'your-sender-id',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? 'your-project-id',
+    authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? 'your-project-id.firebaseapp.com',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'your-project-id.appspot.com',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDIRPwrWHZ5aVfU4WSEuUj7WtS237z5DO4',
-    appId: '1:89886471430:android:0daf63b7dc13a70af75a87',
-    messagingSenderId: '89886471430',
-    projectId: 'pega-attendence',
-    storageBucket: 'pega-attendence.firebasestorage.app',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? 'your-android-api-key',
+    appId: dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? 'your-android-app-id',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'your-sender-id',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? 'your-project-id',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'your-project-id.appspot.com',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAIUqXvYg7nKrYGLBSQdnrAHjEA3iEXUyE',
-    appId: '1:89886471430:ios:97fd9294bbf99fccf75a87',
-    messagingSenderId: '89886471430',
-    projectId: 'pega-attendence',
-    storageBucket: 'pega-attendence.firebasestorage.app',
-    iosBundleId: 'com.matrimpathak.attendenceFlutter',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? 'your-ios-api-key',
+    appId: dotenv.env['FIREBASE_IOS_APP_ID'] ?? 'your-ios-app-id',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'your-sender-id',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? 'your-project-id',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'your-project-id.appspot.com',
+    iosBundleId: dotenv.env['IOS_BUNDLE_ID'] ?? 'com.yourcompany.yourapp',
   );
 
 }
