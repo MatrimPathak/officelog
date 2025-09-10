@@ -1,183 +1,158 @@
 name: 🚀 Build and Release OfficeLog
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag (e.g., v1.0.1)'
-        required: true
-        default: 'v1.0.1'
-      prerelease:
-        description: 'Mark as pre-release'
-        required: false
-        default: false
-        type: boolean
+    push:
+        tags:
+            - "v*.*.*"
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Version tag (e.g., v1.0.1)"
+                required: true
+                default: "v1.0.1"
+            prerelease:
+                description: "Mark as pre-release"
+                required: false
+                default: false
+                type: boolean
 
 jobs:
-  build-and-release:
-    name: 📱 Build APK & Create Release
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    
-    steps:
-    - name: 📥 Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    build-and-release:
+        name: 📱 Build APK & Create Release
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
 
-    - name: ☕ Set up Java 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+        steps:
+            - name: 📥 Checkout Repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-    - name: 🐦 Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.24.0'
-        channel: 'stable'
-        cache: true
+            - name: ☕ Set up Java 17
+              uses: actions/setup-java@v4
+              with:
+                  distribution: "temurin"
+                  java-version: "17"
 
-    - name: 📦 Install Dependencies
-      run: |
-        flutter pub get
-        flutter pub deps
+            - name: 🐦 Set up Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                  flutter-version: "3.24.0"
+                  channel: "stable"
+                  cache: true
 
-    - name: 🔧 Update Firebase Configuration
-      run: |
-        echo "Updating google-services.json with Firebase configuration..."
-        cat > android/app/google-services.json << EOF
-        {
-          "project_info": {
-            "project_number": "${{ secrets.FIREBASE_PROJECT_NUMBER || '89886471430' }}",
-            "project_id": "${{ secrets.FIREBASE_PROJECT_ID || 'pega-attendence' }}",
-            "storage_bucket": "${{ secrets.FIREBASE_STORAGE_BUCKET || 'pega-attendence.firebasestorage.app' }}"
-          },
-          "client": [
-            {
-              "client_info": {
-                "mobilesdk_app_id": "${{ secrets.FIREBASE_ANDROID_APP_ID || '1:89886471430:android:0daf63b7dc13a70af75a87' }}",
-                "android_client_info": {
-                  "package_name": "${{ secrets.ANDROID_PACKAGE_NAME || 'com.matrimpathak.attendence_flutter' }}"
-                }
-              },
-              "oauth_client": [],
-              "api_key": [
-                {
-                  "current_key": "${{ secrets.FIREBASE_ANDROID_API_KEY || 'AIzaSyDIRPwrWHZ5aVfU4WSEuUj7WtS237z5DO4' }}"
-                }
-              ],
-              "services": {
-                "appinvite_service": {
-                  "other_platform_oauth_client": []
-                }
-              }
-            }
-          ],
-          "configuration_version": "1"
-        }
-        EOF
-        echo "✅ Firebase configuration updated"
+            - name: 📦 Install Dependencies
+              run: |
+                  flutter pub get
+                  flutter pub deps
 
-    - name: 🧹 Clean Build
-      run: flutter clean
+            - name: 🔧 Verify Firebase Configuration
+              run: |
+                  echo "Checking for google-services.json..."
+                  if [ ! -f "android/app/google-services.json" ]; then
+                    echo "❌ google-services.json not found!"
+                    echo "Please ensure the google-services.json file is committed to the repository."
+                    echo "This file should contain your Firebase project configuration."
+                    exit 1
+                  fi
+                  echo "✅ Firebase configuration file found"
 
-    - name: 🔨 Build Release APK
-      run: |
-        echo "Building release APK..."
-        flutter build apk --release --verbose
-        echo "✅ APK build completed"
+            - name: 🧹 Clean Build
+              run: flutter clean
 
-    - name: 📱 Build App Bundle (AAB)
-      run: |
-        echo "Building release App Bundle..."
-        flutter build appbundle --release --verbose
-        echo "✅ App Bundle build completed"
+            - name: 🔨 Build Release APK
+              run: |
+                  echo "Building release APK..."
+                  flutter build apk --release --verbose
+                  echo "✅ APK build completed"
 
-    - name: 📊 Get Build Info
-      id: build_info
-      run: |
-        APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)
-        AAB_SIZE=$(du -h build/app/outputs/bundle/release/app-release.aab | cut -f1)
-        echo "APK_SIZE=$APK_SIZE" >> $GITHUB_OUTPUT
-        echo "AAB_SIZE=$AAB_SIZE" >> $GITHUB_OUTPUT
-        echo "BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+            - name: 📱 Build App Bundle (AAB)
+              run: |
+                  echo "Building release App Bundle..."
+                  flutter build appbundle --release --verbose
+                  echo "✅ App Bundle build completed"
 
-    - name: 🏷️ Get Version Info
-      id: get_version
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          VERSION="${{ github.event.inputs.version }}"
-        else
-          VERSION="${GITHUB_REF#refs/tags/}"
-        fi
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
-        echo "🏷️ Release version: $VERSION"
+            - name: 📊 Get Build Info
+              id: build_info
+              run: |
+                  APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)
+                  AAB_SIZE=$(du -h build/app/outputs/bundle/release/app-release.aab | cut -f1)
+                  echo "APK_SIZE=$APK_SIZE" >> $GITHUB_OUTPUT
+                  echo "AAB_SIZE=$AAB_SIZE" >> $GITHUB_OUTPUT
+                  echo "BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
-    - name: 📝 Generate Release Notes
-      id: release_notes
-      run: |
-        cat > release_notes.md << EOF
-        ## 🎉 OfficeLog ${{ steps.get_version.outputs.VERSION }}
-        
-        **Built on:** ${{ steps.build_info.outputs.BUILD_DATE }}
-        
-        ### 📱 Download Options
-        - **APK**: ${{ steps.build_info.outputs.APK_SIZE }} - Direct install on Android devices
-        - **AAB**: ${{ steps.build_info.outputs.AAB_SIZE }} - For Google Play Store publishing
-        
-        ### ✨ Features
-        - 📍 **Location-based Attendance**: Automatic check-in/check-out using geofencing
-        - 📊 **Visual Analytics**: Beautiful charts showing attendance patterns
-        - 📅 **Calendar Integration**: Monthly view with attendance tracking
-        - 🔔 **Smart Notifications**: Reminders for check-in/check-out
-        - 🌙 **Dark Mode**: Modern UI with light/dark theme support
-        - 🔐 **Google Sign-In**: Secure authentication
-        - ☁️ **Cloud Sync**: Data synchronized across devices
-        
-        ### 📲 Installation Instructions
-        1. Download the APK file below
-        2. Enable "Install from unknown sources" in Android settings
-        3. Install the APK on your Android device
-        4. Grant location permissions when prompted
-        5. Sign in with your Google account
-        
-        ### 📋 System Requirements
-        - **Android**: 5.0+ (API level 21)
-        - **Permissions**: Location, Internet, Storage
-        - **Account**: Google account for authentication
-        - **Storage**: ~100MB free space
-        
-        ### 🔧 Technical Details
-        - **Package**: com.matrimpathak.attendence_flutter
-        - **Version Code**: Built from commit ${{ github.sha }}
-        - **Target SDK**: Android 14 (API 34)
-        - **Minimum SDK**: Android 5.0 (API 21)
-        EOF
+            - name: 🏷️ Get Version Info
+              id: get_version
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    VERSION="${{ github.event.inputs.version }}"
+                  else
+                    VERSION="${GITHUB_REF#refs/tags/}"
+                  fi
+                  echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+                  echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
+                  echo "🏷️ Release version: $VERSION"
 
-    - name: 🚀 Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ steps.get_version.outputs.VERSION }}
-        name: 🏢 OfficeLog ${{ steps.get_version.outputs.VERSION }}
-        body_path: release_notes.md
-        draft: false
-        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
-        files: |
-          build/app/outputs/flutter-apk/app-release.apk
-          build/app/outputs/bundle/release/app-release.aab
-        token: ${{ secrets.GITHUB_TOKEN }}
+            - name: 📝 Generate Release Notes
+              id: release_notes
+              run: |
+                  cat > release_notes.md << EOF
+                  ## 🎉 OfficeLog ${{ steps.get_version.outputs.VERSION }}
 
-    - name: 📋 Upload Build Artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: build-outputs-${{ steps.get_version.outputs.VERSION }}
-        path: |
-          build/app/outputs/flutter-apk/
-          build/app/outputs/bundle/
-        retention-days: 30
+                  **Built on:** ${{ steps.build_info.outputs.BUILD_DATE }}
+
+                  ### 📱 Download Options
+                  - **APK**: ${{ steps.build_info.outputs.APK_SIZE }} - Direct install on Android devices
+                  - **AAB**: ${{ steps.build_info.outputs.AAB_SIZE }} - For Google Play Store publishing
+
+                  ### ✨ Features
+                  - 📍 **Location-based Attendance**: Automatic check-in/check-out using geofencing
+                  - 📊 **Visual Analytics**: Beautiful charts showing attendance patterns
+                  - 📅 **Calendar Integration**: Monthly view with attendance tracking
+                  - 🔔 **Smart Notifications**: Reminders for check-in/check-out
+                  - 🌙 **Dark Mode**: Modern UI with light/dark theme support
+                  - 🔐 **Google Sign-In**: Secure authentication
+                  - ☁️ **Cloud Sync**: Data synchronized across devices
+
+                  ### 📲 Installation Instructions
+                  1. Download the APK file below
+                  2. Enable "Install from unknown sources" in Android settings
+                  3. Install the APK on your Android device
+                  4. Grant location permissions when prompted
+                  5. Sign in with your Google account
+
+                  ### 📋 System Requirements
+                  - **Android**: 5.0+ (API level 21)
+                  - **Permissions**: Location, Internet, Storage
+                  - **Account**: Google account for authentication
+                  - **Storage**: ~100MB free space
+
+                  ### 🔧 Technical Details
+                  - **Package**: com.matrimpathak.attendence_flutter
+                  - **Version Code**: Built from commit ${{ github.sha }}
+                  - **Target SDK**: Android 14 (API 34)
+                  - **Minimum SDK**: Android 5.0 (API 21)
+                  EOF
+
+            - name: 🚀 Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.get_version.outputs.VERSION }}
+                  name: 🏢 OfficeLog ${{ steps.get_version.outputs.VERSION }}
+                  body_path: release_notes.md
+                  draft: false
+                  prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+                  files: |
+                      build/app/outputs/flutter-apk/app-release.apk
+                      build/app/outputs/bundle/release/app-release.aab
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: 📋 Upload Build Artifacts
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: build-outputs-${{ steps.get_version.outputs.VERSION }}
+                  path: |
+                      build/app/outputs/flutter-apk/
+                      build/app/outputs/bundle/
+                  retention-days: 30
