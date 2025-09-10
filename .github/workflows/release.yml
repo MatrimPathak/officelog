@@ -1,0 +1,139 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.0'
+        channel: 'stable'
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Update Google Services config
+      run: |
+        # Update google-services.json with actual values from secrets
+        cat > android/app/google-services.json << EOF
+        {
+          "project_info": {
+            "project_number": "${{ secrets.FIREBASE_PROJECT_NUMBER }}",
+            "project_id": "${{ secrets.FIREBASE_PROJECT_ID }}",
+            "storage_bucket": "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "${{ secrets.FIREBASE_ANDROID_APP_ID }}",
+                "android_client_info": {
+                  "package_name": "${{ secrets.ANDROID_PACKAGE_NAME }}"
+                }
+              },
+              "oauth_client": [],
+              "api_key": [
+                {
+                  "current_key": "${{ secrets.FIREBASE_ANDROID_API_KEY }}"
+                }
+              ],
+              "services": {
+                "appinvite_service": {
+                  "other_platform_oauth_client": []
+                }
+              }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        EOF
+
+    - name: Build APK
+      run: flutter build apk --release
+
+    - name: Build App Bundle
+      run: flutter build appbundle --release
+
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: OfficeLog ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## OfficeLog - Attendance Tracking App
+          
+          ### What's New in ${{ steps.get_version.outputs.VERSION }}
+          - Bug fixes and performance improvements
+          - Updated dependencies
+          
+          ### Installation
+          Download the APK file and install it on your Android device.
+          
+          ### Features
+          - 📍 **Location-based Attendance**: Automatic check-in/check-out using geofencing
+          - 📊 **Visual Analytics**: Beautiful charts showing attendance patterns
+          - 📅 **Calendar Integration**: Monthly view with attendance tracking
+          - 🔔 **Smart Notifications**: Reminders for check-in/check-out
+          - 🌙 **Dark Mode**: Modern UI with light/dark theme support
+          - 🔐 **Google Sign-In**: Secure authentication
+          - ☁️ **Cloud Sync**: Data synchronized across devices
+          
+          ### Requirements
+          - Android 5.0 (API level 21) or higher
+          - Location permissions for geofencing features
+          - Internet connection for sync and authentication
+        draft: false
+        prerelease: false
+
+    - name: Upload APK
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/app/outputs/flutter-apk/app-release.apk
+        asset_name: OfficeLog-${{ steps.get_version.outputs.VERSION }}.apk
+        asset_content_type: application/vnd.android.package-archive
+
+    - name: Upload App Bundle
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/app/outputs/bundle/release/app-release.aab
+        asset_name: OfficeLog-${{ steps.get_version.outputs.VERSION }}.aab
+        asset_content_type: application/octet-stream
