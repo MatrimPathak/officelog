@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/auth_provider.dart' as auth_provider;
 import '../providers/attendance_provider.dart';
 import '../providers/holiday_provider.dart';
@@ -9,6 +8,7 @@ import '../widgets/attendance_calendar.dart';
 import '../widgets/office_log_logo.dart';
 import '../themes/app_themes.dart';
 import '../utils/working_days_calculator.dart';
+import '../services/admin_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -75,24 +75,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      if (_isAdmin()) {
-                        Navigator.of(context).pushNamed('/admin');
+                      // Tap action: Navigate to Profile Screen
+                      Navigator.of(context).pushNamed('/profile');
+                    },
+                    onLongPress: () async {
+                      // Long press action: Check admin access
+                      final isAdmin = await AdminService.isCurrentUserAdmin();
+                      if (isAdmin) {
+                        if (mounted) {
+                          Navigator.of(context).pushNamed('/admin');
+                        }
+                      } else {
+                        if (mounted) {
+                          AdminService.showAccessDeniedMessage(context);
+                        }
                       }
                     },
                     child: CircleAvatar(
-                      radius: 16,
+                      radius: 18,
                       backgroundImage: user?.photoURL != null
                           ? NetworkImage(user!.photoURL!)
                           : null,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
                       child: user?.photoURL == null
                           ? Text(
                               user?.displayName
                                       ?.substring(0, 1)
                                       .toUpperCase() ??
                                   'U',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
                               ),
                             )
                           : null,
@@ -813,11 +829,5 @@ class _HomeScreenState extends State<HomeScreen> {
         'canAutoCheckIn': false,
       };
     }
-  }
-
-  // Check if current user is admin
-  bool _isAdmin() {
-    final user = FirebaseAuth.instance.currentUser;
-    return user != null && user.email == 'matrimpathak1999@gmail.com';
   }
 }

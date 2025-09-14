@@ -3,7 +3,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../services/attendance_service.dart';
 import '../utils/working_days_calculator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -47,20 +46,24 @@ class NotificationService {
 
   // Request notification permissions
   static Future<bool> requestPermissions() async {
-    // Request notification permission
-    final status = await Permission.notification.request();
-
-    if (status.isGranted) {
-      // For Android 13+, also request POST_NOTIFICATIONS permission
-      await _notifications
+    try {
+      // For Android 13+, request POST_NOTIFICATIONS permission
+      final androidImplementation = _notifications
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
-      return true;
-    }
+          >();
 
-    return false;
+      if (androidImplementation != null) {
+        final granted = await androidImplementation
+            .requestNotificationsPermission();
+        return granted ?? true; // Default to true if we can't determine
+      }
+
+      return true; // Assume granted for older Android versions
+    } catch (e) {
+      debugPrint('Error requesting notification permissions: $e');
+      return true; // Don't block the user if we can't request
+    }
   }
 
   // Schedule daily reminder notification

@@ -70,6 +70,28 @@ class OfficeModel {
       createdAt: createdAt ?? this.createdAt,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OfficeModel &&
+        other.id == id &&
+        other.name == name &&
+        other.latitude == latitude &&
+        other.longitude == longitude &&
+        other.radius == radius &&
+        other.timezone == timezone;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(id, name, latitude, longitude, radius, timezone);
+  }
+
+  @override
+  String toString() {
+    return 'OfficeModel(id: $id, name: $name, latitude: $latitude, longitude: $longitude, radius: $radius, timezone: $timezone)';
+  }
 }
 
 class UserModel {
@@ -135,5 +157,26 @@ class UserModel {
       officeId: officeId ?? this.officeId,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserModel &&
+        other.uid == uid &&
+        other.name == name &&
+        other.email == email &&
+        other.role == role &&
+        other.officeId == officeId;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(uid, name, email, role, officeId);
+  }
+
+  @override
+  String toString() {
+    return 'UserModel(uid: $uid, name: $name, email: $email, role: $role, officeId: $officeId)';
   }
 }

@@ -119,283 +119,298 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Feedback'), elevation: 0),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.feedback,
-                        size: 48,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'We\'d love your feedback!',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Help us improve OfficeLog by sharing your thoughts, suggestions, or reporting issues.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.feedback,
+                          size: 48,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.blue.shade300
+                              : Theme.of(context).primaryColor,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Form Fields
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name field (optional)
-                      Row(
-                        children: [
-                          Text(
-                            'Name (optional)',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          if (_nameController.text.isNotEmpty) ...[
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.check_circle,
-                              size: 16,
-                              color: AppThemes.getSuccessColor(context),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Auto-filled',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: AppThemes.getSuccessColor(context),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          hintText: 'Your name',
-                          prefixIcon: const Icon(Icons.person_outline),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Theme.of(context).cardColor,
+                        const SizedBox(height: 16),
+                        Text(
+                          'We\'d love your feedback!',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
                         ),
-                        textInputAction: TextInputAction.next,
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Email field (optional)
-                      Row(
-                        children: [
-                          Text(
-                            'Email (optional)',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Help us improve OfficeLog by sharing your thoughts, suggestions, or reporting issues.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade300
+                                : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                           ),
-                          if (_emailController.text.isNotEmpty) ...[
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.check_circle,
-                              size: 16,
-                              color: AppThemes.getSuccessColor(context),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Auto-filled',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: AppThemes.getSuccessColor(context),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          hintText: 'your.email@example.com',
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Theme.of(context).cardColor,
+                          textAlign: TextAlign.center,
                         ),
-                        textInputAction: TextInputAction.next,
-                        validator: (value) {
-                          if (value != null && value.trim().isNotEmpty) {
-                            if (!FeedbackService.isValidEmail(value)) {
-                              return 'Please enter a valid email address';
-                            }
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Message field (required)
-                      Text(
-                        'Feedback Message *',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _messageController,
-                        maxLines: 6,
-                        decoration: InputDecoration(
-                          hintText:
-                              'Share your thoughts, suggestions, or report issues...',
-                          prefixIcon: const Padding(
-                            padding: EdgeInsets.only(bottom: 100),
-                            child: Icon(Icons.message_outlined),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Theme.of(context).cardColor,
-                          alignLabelWithHint: true,
-                        ),
-                        textInputAction: TextInputAction.newline,
-                        validator: (value) {
-                          if (!FeedbackService.isValidMessage(value ?? '')) {
-                            return 'Please enter your feedback message';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 8),
-                      Text(
-                        '* Required field',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Submit Button
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitFeedback,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      ],
                     ),
-                    elevation: 2,
                   ),
-                  child: _isSubmitting
-                      ? const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Form Fields
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Name field (optional)
+                        Row(
                           children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                            Text(
+                              'Name (optional)',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            if (_nameController.text.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: AppThemes.getSuccessColor(context),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Auto-filled',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: AppThemes.getSuccessColor(context),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            hintText: 'Your name',
+                            prefixIcon: const Icon(Icons.person_outline),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Theme.of(context).cardColor,
+                          ),
+                          textInputAction: TextInputAction.next,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Email field (optional)
+                        Row(
+                          children: [
+                            Text(
+                              'Email (optional)',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            if (_emailController.text.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: AppThemes.getSuccessColor(context),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Auto-filled',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: AppThemes.getSuccessColor(context),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: 'your.email@example.com',
+                            prefixIcon: const Icon(Icons.email_outlined),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Theme.of(context).cardColor,
+                          ),
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value != null && value.trim().isNotEmpty) {
+                              if (!FeedbackService.isValidEmail(value)) {
+                                return 'Please enter a valid email address';
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Message field (required)
+                        Text(
+                          'Feedback Message *',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _messageController,
+                          maxLines: 6,
+                          decoration: InputDecoration(
+                            hintText:
+                                'Share your thoughts, suggestions, or report issues...',
+                            prefixIcon: const Padding(
+                              padding: EdgeInsets.only(bottom: 100),
+                              child: Icon(Icons.message_outlined),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Theme.of(context).cardColor,
+                            alignLabelWithHint: true,
+                          ),
+                          textInputAction: TextInputAction.newline,
+                          validator: (value) {
+                            if (!FeedbackService.isValidMessage(value ?? '')) {
+                              return 'Please enter your feedback message';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 8),
+                        Text(
+                          '* Required field',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade400
+                                : Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Submit Button
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submitFeedback,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.blue.shade600
+                          : Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: _isSubmitting
+                        ? const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 12),
-                            Text('Submitting...'),
-                          ],
-                        )
-                      : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.send),
-                            SizedBox(width: 8),
-                            Text(
-                              'Submit Feedback',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                              SizedBox(width: 12),
+                              Text('Submitting...'),
+                            ],
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.send),
+                              SizedBox(width: 8),
+                              Text(
+                                'Submit Feedback',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Privacy note
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).primaryColor.withValues(alpha: 0.2),
+                            ],
+                          ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.privacy_tip_outlined,
-                      color: Theme.of(context).primaryColor,
-                      size: 20,
+
+                const SizedBox(height: 16),
+
+                // Privacy note
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue.shade900.withValues(alpha: 0.3)
+                        : Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.blue.shade600
+                          : Theme.of(context).primaryColor.withValues(alpha: 0.2),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Your feedback helps us improve OfficeLog. We respect your privacy and will only use this information to enhance the app.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).primaryColor,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.privacy_tip_outlined,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.blue.shade300
+                            : Theme.of(context).primaryColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Your feedback helps us improve OfficeLog. We respect your privacy and will only use this information to enhance the app.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.blue.shade100
+                                : Theme.of(context).primaryColor,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                // Extra bottom padding to ensure content is not cut off
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),

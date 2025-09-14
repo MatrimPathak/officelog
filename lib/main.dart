@@ -15,6 +15,9 @@ import 'services/holiday_service.dart';
 import 'services/office_service.dart';
 import 'services/update_office_location.dart';
 import 'services/simple_background_geofence_service.dart';
+import 'services/persistent_background_service.dart';
+import 'services/settings_persistence_service.dart';
+import 'services/admin_service.dart';
 import 'themes/app_themes.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -22,6 +25,8 @@ import 'screens/summary_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/admin_screen.dart';
 import 'screens/feedback_screen.dart';
+import 'screens/profile_confirmation_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,14 +49,29 @@ void main() async {
     persistenceEnabled: true,
   );
 
+  // Initialize settings persistence service first
+  await SettingsPersistenceService.initialize();
+
   // Initialize notification service
   await NotificationService.initialize();
 
   // Initialize simple background geofence service
   await SimpleBackgroundGeofenceService.initialize();
 
+  // Initialize persistent background service
+  await PersistentBackgroundService.initialize();
+
+  // Restart auto check-in service if it was enabled before app restart
+  if (await PersistentBackgroundService.isAutoCheckInEnabled()) {
+    await PersistentBackgroundService.startAutoCheckIn();
+    print('✅ Auto check-in service restarted after app launch');
+  }
+
   // Initialize default data
   await _initializeDefaultData();
+
+  // Initialize admin configuration
+  await AdminService.initializeAdminConfig();
 
   runApp(const AttendanceApp());
 }
@@ -101,6 +121,9 @@ class AttendanceApp extends StatelessWidget {
             routes: {
               '/': (context) => const AuthWrapper(),
               '/login': (context) => const LoginScreen(),
+              '/profile-confirmation': (context) =>
+                  const ProfileConfirmationScreen(),
+              '/profile': (context) => const ProfileScreen(),
               '/home': (context) => const HomeScreen(),
               '/summary': (context) => const SummaryScreen(),
               '/settings': (context) => const SettingsScreen(),
@@ -124,6 +147,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   Timer? _resetTimer;
+  final bool _isCheckingProfile = false;
 
   @override
   void initState() {
@@ -151,6 +175,26 @@ class _AuthWrapperState extends State<AuthWrapper> {
     });
   }
 
+  Future<bool> _needsProfileConfirmation(String userId) async {
+    try {
+      // Check if onboarding is completed
+      final onboardingCompleted =
+          await SettingsPersistenceService.isOnboardingCompleted();
+      if (!onboardingCompleted) {
+        return true;
+      }
+
+      // Check if user has an office assigned
+      final officeService = OfficeService();
+      final userOffice = await officeService.getUserOffice(userId);
+
+      return userOffice == null;
+    } catch (e) {
+      debugPrint('Error checking profile confirmation: $e');
+      return true; // Default to showing confirmation screen if there's an error
+    }
+  }
+
   @override
   void dispose() {
     _resetTimer?.cancel();
@@ -174,7 +218,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         // Show loading screen while checking auth state
-        if (authProvider.isLoading) {
+        if (authProvider.isLoading || _isCheckingProfile) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
@@ -184,7 +228,27 @@ class _AuthWrapperState extends State<AuthWrapper> {
         final user = authProvider.user;
 
         if (authProvider.isAuthenticated && user != null) {
-          return HomeScreen(key: ValueKey('home_${user.uid}'));
+          // Check if user needs profile confirmation
+          return FutureBuilder<bool>(
+            future: _needsProfileConfirmation(user.uid),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final needsConfirmation = snapshot.data ?? true;
+
+              if (needsConfirmation) {
+                return const ProfileConfirmationScreen(
+                  key: ValueKey('profile_confirmation'),
+                );
+              } else {
+                return HomeScreen(key: ValueKey('home_${user.uid}'));
+              }
+            },
+          );
         } else {
           return const LoginScreen(key: ValueKey('login_screen'));
         }

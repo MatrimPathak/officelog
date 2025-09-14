@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/holiday_provider.dart';
 import '../models/holiday_model.dart';
 import '../models/office_model.dart';
 import '../services/office_service.dart';
+import '../services/admin_service.dart';
 import '../themes/app_themes.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -32,49 +32,60 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   // Check if current user is admin
-  bool _isAdmin() {
-    final user = FirebaseAuth.instance.currentUser;
-    return user != null && user.email == 'matrimpathak1999@gmail.com';
+  Future<bool> _isAdmin() async {
+    return await AdminService.isCurrentUserAdmin();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isAdmin()) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Access Denied')),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.lock, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'Admin access required',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text('Only administrators can access this page'),
-            ],
-          ),
-        ),
-      );
-    }
+    return FutureBuilder<bool>(
+      future: _isAdmin(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Admin Panel')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Panel'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.event), text: 'Holidays'),
-            Tab(icon: Icon(Icons.location_on), text: 'Offices'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [_buildHolidaysTab(), _buildOfficesTab()],
-      ),
+        if (!(snapshot.data ?? false)) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Access Denied')),
+            body: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.lock, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Admin access required',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text('Only administrators can access this page'),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Admin Panel'),
+            bottom: TabBar(
+              controller: _tabController,
+              tabs: const [
+                Tab(icon: Icon(Icons.event), text: 'Holidays'),
+                Tab(icon: Icon(Icons.location_on), text: 'Offices'),
+              ],
+            ),
+          ),
+          body: TabBarView(
+            controller: _tabController,
+            children: [_buildHolidaysTab(), _buildOfficesTab()],
+          ),
+        );
+      },
     );
   }
 

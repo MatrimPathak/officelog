@@ -51,8 +51,11 @@ app.*.map.json
 # Local properties
 /android/local.properties
 
-# Generated files
+# Generated files and keystore security
 /android/key.properties
+/android/keystore.properties
+/android/*.keystore
+/android/*.jks
 
 # Environment variables
 .env

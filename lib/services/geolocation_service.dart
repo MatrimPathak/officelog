@@ -1,5 +1,4 @@
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/office_service.dart';
@@ -37,12 +36,9 @@ class GeolocationService {
         return false;
       }
 
-      // For Android, also request background location permission
-      final backgroundStatus = await Permission.locationAlways.request();
-
+      // Accept whileInUse or always permission
       return permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always ||
-          backgroundStatus.isGranted;
+          permission == LocationPermission.always;
     } catch (e) {
       print('Error requesting location permissions: $e');
       return false;
