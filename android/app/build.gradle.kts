@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.io.File
 
 plugins {
     id("com.android.application")
@@ -15,6 +16,34 @@ val keystorePropertiesFile = rootProject.file("keystore.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
+// Automatic version calculation from pubspec.yaml
+fun getVersionFromPubspec(): Pair<String, Int> {
+    val pubspecFile = File(rootProject.projectDir.parent, "pubspec.yaml")
+    val pubspecContent = pubspecFile.readText()
+    
+    // Extract version line (e.g., "version: 1.2.3+4")
+    val versionRegex = Regex("version:\\s*([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:\\+([0-9]+))?")
+    val matchResult = versionRegex.find(pubspecContent)
+        ?: throw GradleException("Could not find version in pubspec.yaml")
+    
+    val major = matchResult.groupValues[1].toInt()
+    val minor = matchResult.groupValues[2].toInt()
+    val patch = matchResult.groupValues[3].toInt()
+    
+    // Create semantic version name (without build number)
+    val versionName = "$major.$minor.$patch"
+    
+    // Calculate versionCode using formula: (major * 10000) + (minor * 100) + patch
+    // This ensures versionCode always increases with semantic versions
+    val versionCode = (major * 10000) + (minor * 100) + patch
+    
+    println("📱 Auto-calculated version: $versionName (code: $versionCode)")
+    
+    return Pair(versionName, versionCode)
+}
+
+val (calculatedVersionName, calculatedVersionCode) = getVersionFromPubspec()
 
 android {
     namespace = "com.matrimpathak.attendence_flutter"
@@ -48,8 +77,10 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        
+        // Use auto-calculated version from pubspec.yaml semantic version
+        versionCode = calculatedVersionCode
+        versionName = calculatedVersionName
     }
 
     buildTypes {

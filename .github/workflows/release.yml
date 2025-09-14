@@ -45,10 +45,11 @@ jobs:
               run: |
                   PUBSPEC_VERSION_LINE=$(grep -E '^version:' pubspec.yaml)
                   PUBSPEC_VERSION=$(echo "$PUBSPEC_VERSION_LINE" | awk '{print $2}')
+                  # Remove any build number (+X) if present for semantic version comparison
                   PUBSPEC_VERSION_NUMBER="${PUBSPEC_VERSION%%+*}"
                   echo "PUBSPEC_VERSION=$PUBSPEC_VERSION" >> $GITHUB_OUTPUT
                   echo "PUBSPEC_VERSION_NUMBER=$PUBSPEC_VERSION_NUMBER" >> $GITHUB_OUTPUT
-                  echo "pubspec.yaml version: $PUBSPEC_VERSION"
+                  echo "pubspec.yaml version: $PUBSPEC_VERSION (semantic: $PUBSPEC_VERSION_NUMBER)"
 
             - name: ✅ Validate version bump and match
               run: |
@@ -132,8 +133,15 @@ jobs:
               run: |
                   APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)
                   AAB_SIZE=$(du -h build/app/outputs/bundle/release/app-release.aab | cut -f1)
+                  
+                  # Calculate version code from semantic version for display
+                  VERSION="${{ steps.version_info.outputs.VERSION_NUMBER }}"
+                  IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+                  VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+                  
                   echo "APK_SIZE=$APK_SIZE" >> $GITHUB_OUTPUT
                   echo "AAB_SIZE=$AAB_SIZE" >> $GITHUB_OUTPUT
+                  echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
                   echo "BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
             - name: 🏷️ Get Version Info
@@ -188,7 +196,9 @@ jobs:
 
                   ### 🔧 Technical Details
                   - **Package**: com.matrimpathak.attendence_flutter
-                  - **Version Code**: Built from commit ${{ github.sha }}
+                  - **Version Name**: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+                  - **Version Code**: ${{ steps.build_info.outputs.VERSION_CODE }} (auto-calculated)
+                  - **Built from**: Commit ${{ github.sha }}
                   - **Target SDK**: Android 14 (API 34)
                   - **Minimum SDK**: Android 5.0 (API 21)
                   EOF
