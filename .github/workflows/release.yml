@@ -28,6 +28,55 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: 🏷️ Determine Release Version (pre)
+              id: version_info
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    VERSION="${{ github.event.inputs.version }}"
+                  else
+                    VERSION="${GITHUB_REF#refs/tags/}"
+                  fi
+                  echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+                  echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
+                  echo "Release version (pre): $VERSION"
+
+            - name: 🧾 Read pubspec version
+              id: pubspec_version
+              run: |
+                  PUBSPEC_VERSION_LINE=$(grep -E '^version:' pubspec.yaml)
+                  PUBSPEC_VERSION=$(echo "$PUBSPEC_VERSION_LINE" | awk '{print $2}')
+                  PUBSPEC_VERSION_NUMBER="${PUBSPEC_VERSION%%+*}"
+                  echo "PUBSPEC_VERSION=$PUBSPEC_VERSION" >> $GITHUB_OUTPUT
+                  echo "PUBSPEC_VERSION_NUMBER=$PUBSPEC_VERSION_NUMBER" >> $GITHUB_OUTPUT
+                  echo "pubspec.yaml version: $PUBSPEC_VERSION"
+
+            - name: ✅ Validate version bump and match
+              run: |
+                  set -e
+                  EXPECTED="${{ steps.version_info.outputs.VERSION_NUMBER }}"
+                  PUBSPEC_VERSION_NUMBER="${{ steps.pubspec_version.outputs.PUBSPEC_VERSION_NUMBER }}"
+                  echo "Expected version (from input/tag): $EXPECTED"
+                  echo "pubspec.yaml version: $PUBSPEC_VERSION_NUMBER"
+                  if [ "$PUBSPEC_VERSION_NUMBER" != "$EXPECTED" ]; then
+                    echo "❌ Version mismatch. Bump pubspec.yaml to $EXPECTED before running."
+                    exit 1
+                  fi
+                  git fetch --tags --quiet
+                  LAST_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n1)
+                  if [ -n "$LAST_TAG" ]; then
+                    LAST="${LAST_TAG#v}"
+                    if [ "$LAST" = "$EXPECTED" ]; then
+                      echo "❌ Version $EXPECTED already exists. Bump the version.";
+                      exit 1
+                    fi
+                    TOP=$(printf "%s\n%s" "$LAST" "$EXPECTED" | sort -V | tail -n1)
+                    if [ "$TOP" != "$EXPECTED" ]; then
+                      echo "❌ Version $EXPECTED must be greater than last tag $LAST."
+                      exit 1
+                    fi
+                  fi
+                  echo "✅ Version validation passed."
+
             - name: ☕ Set up Java 17
               uses: actions/setup-java@v4
               with:
