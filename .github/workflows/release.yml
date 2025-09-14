@@ -37,14 +37,20 @@ jobs:
             - name: 🐦 Set up Flutter
               uses: subosito/flutter-action@v2
               with:
-                  flutter-version: "3.24.0"
+                  flutter-version: "3.27.0"
                   channel: "stable"
                   cache: true
+
+            - name: 🔧 Configure Flutter
+              run: |
+                  flutter config --no-analytics
+                  flutter config --no-cli-animations
 
             - name: 📦 Install Dependencies
               run: |
                   flutter pub get
                   flutter pub deps
+                  flutter doctor
 
             - name: 🔧 Verify Firebase Configuration
               run: |
@@ -106,13 +112,17 @@ jobs:
                   - **AAB**: ${{ steps.build_info.outputs.AAB_SIZE }} - For Google Play Store publishing
 
                   ### ✨ Features
+                  - 👤 **AppBar Profile Picture**: Tap for profile management, long press for admin access
                   - 📍 **Location-based Attendance**: Automatic check-in/check-out using geofencing
+                  - 🔄 **Persistent Auto Check-In**: Background service with WorkManager integration
+                  - 🔋 **Battery Optimization**: Android battery optimization bypass system
                   - 📊 **Visual Analytics**: Beautiful charts showing attendance patterns
                   - 📅 **Calendar Integration**: Monthly view with attendance tracking
                   - 🔔 **Smart Notifications**: Reminders for check-in/check-out
                   - 🌙 **Dark Mode**: Modern UI with light/dark theme support
                   - 🔐 **Google Sign-In**: Secure authentication
                   - ☁️ **Cloud Sync**: Data synchronized across devices
+                  - 🛡️ **Admin Panel**: Secure admin access with holiday and office management
 
                   ### 📲 Installation Instructions
                   1. Download the APK file below
