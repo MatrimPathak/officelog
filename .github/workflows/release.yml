@@ -20,7 +20,7 @@ jobs:
     build-and-release:
         name: 📱 Build APK & Create Release
         runs-on: ubuntu-latest
-        timeout-minutes: 30
+        timeout-minutes: 45
 
         steps:
             - name: 📥 Checkout Repository
@@ -101,6 +101,7 @@ jobs:
               run: |
                   flutter config --no-analytics
                   flutter config --no-cli-animations
+                  export GRADLE_OPTS="-Xmx4g -XX:+UseG1GC"
 
             - name: 📦 Install Dependencies
               run: |
@@ -125,13 +126,13 @@ jobs:
             - name: 🔨 Build Release APK
               run: |
                   echo "Building release APK..."
-                  flutter build apk --release --verbose
+                  flutter build apk --release --dart-define=flutter.inspector.structuredErrors=false
                   echo "✅ APK build completed"
 
             - name: 📱 Build App Bundle (AAB)
               run: |
                   echo "Building release App Bundle..."
-                  flutter build appbundle --release --verbose
+                  flutter build appbundle --release --dart-define=flutter.inspector.structuredErrors=false
                   echo "✅ App Bundle build completed"
 
             - name: 📊 Get Build Info
@@ -139,17 +140,16 @@ jobs:
               run: |
                   APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)
                   AAB_SIZE=$(du -h build/app/outputs/bundle/release/app-release.aab | cut -f1)
-                  
+
                   # Calculate version code from semantic version for display
                   VERSION="${{ steps.version_info.outputs.VERSION_NUMBER }}"
                   IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
                   VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
-                  
+
                   echo "APK_SIZE=$APK_SIZE" >> $GITHUB_OUTPUT
                   echo "AAB_SIZE=$AAB_SIZE" >> $GITHUB_OUTPUT
                   echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
                   echo "BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-
 
             - name: 📝 Generate Release Notes
               id: release_notes
