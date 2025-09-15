@@ -232,40 +232,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 16),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                    children: [
-                                      _buildStatItem(
-                                        context,
-                                        'Present',
-                                        '${stats['attendedDays']}',
-                                        Icons.check_circle,
-                                        Colors.green,
-                                      ),
-                                      _buildStatItem(
-                                        context,
-                                        'Total Days',
-                                        '${stats['totalDays']}',
-                                        Icons.calendar_today,
-                                        Colors.blue,
-                                      ),
-                                      _buildStatItem(
-                                        context,
-                                        'Attendance %',
-                                        '${stats['percentage'].toStringAsFixed(1)}%',
-                                        Icons.percent,
-                                        Colors.orange,
-                                        isLarge: true,
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // 60% Target Progress
-                                  _build60PercentTargetCard(
-                                    context,
-                                    stats['targetInfo'],
-                                  ),
+                                  // Monthly Compliance Card
+                                  _buildMonthlyComplianceCard(context, stats),
                                 ],
                               );
                             },
@@ -423,50 +391,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatItem(
+  Widget _buildMonthlyComplianceCard(
     BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color, {
-    bool isLarge = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: isLarge ? 32 : 24),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: color),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _build60PercentTargetCard(
-    BuildContext context,
-    Map<String, dynamic> targetInfo,
+    Map<String, dynamic> stats,
   ) {
-    // Get color based on status
-    Color getStatusColor() {
-      switch (targetInfo['color']) {
+    // Get color based on compliance status
+    Color getComplianceColor() {
+      switch (stats['color']) {
         case 'green':
           return Colors.green;
         case 'yellow':
@@ -478,22 +409,23 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    // Get icon based on status
-    IconData getStatusIcon() {
-      switch (targetInfo['status']) {
-        case 'met':
+    // Get icon based on compliance status
+    IconData getComplianceIcon() {
+      switch (stats['status']) {
+        case 'good':
           return Icons.check_circle;
-        case 'achievable':
-          return Icons.trending_up;
-        case 'not_achievable':
+        case 'borderline':
+          return Icons.warning;
+        case 'poor':
           return Icons.error;
         default:
-          return Icons.track_changes;
+          return Icons.analytics;
       }
     }
 
-    final color = getStatusColor();
-    final icon = getStatusIcon();
+    final color = getComplianceColor();
+    final icon = getComplianceIcon();
+    final compliance = stats['compliance'] as double;
 
     return Container(
       width: double.infinity,
@@ -503,59 +435,136 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '60% Attendance Target',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  targetInfo['message'] ?? '',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: color),
-                ),
-                if (targetInfo['status'] == 'achievable' ||
-                    targetInfo['status'] == 'not_achievable') ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Target: ${targetInfo['targetDays']} days • Remaining: ${targetInfo['remainingDays']} days',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (targetInfo['daysNeeded'] > 0) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${targetInfo['daysNeeded']}',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
+          Row(
+            children: [
+              Icon(Icons.analytics, color: color, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                '📊 Monthly Attendance',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: color,
                 ),
               ),
-            ),
-          ],
+              const Spacer(),
+              Icon(icon, color: color, size: 20),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildComplianceItem(
+                context,
+                'Required Days',
+                '${stats['requiredDays']}',
+                Colors.blue,
+              ),
+              _buildComplianceItem(
+                context,
+                'Attended',
+                '${stats['attendedDays']}',
+                Colors.green,
+              ),
+              _buildComplianceItem(
+                context,
+                'Still Needed',
+                '${stats['stillNeeded']}',
+                stats['stillNeeded'] > 0 ? Colors.orange : Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Compliance',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: color.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          '${compliance.toStringAsFixed(1)}%',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (compliance >= 60)
+                          const Text('✅', style: TextStyle(fontSize: 16))
+                        else if (compliance >= 55)
+                          const Text('⚠️', style: TextStyle(fontSize: 16))
+                        else
+                          const Text('❌', style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  compliance >= 60
+                      ? 'On Track'
+                      : compliance >= 55
+                      ? 'Borderline'
+                      : 'Behind',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildComplianceItem(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.8)),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 

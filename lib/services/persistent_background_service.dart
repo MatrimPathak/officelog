@@ -242,12 +242,20 @@ void callbackDispatcher() {
       final now = DateTime.now();
       if (!WorkingDaysCalculator.isWorkingDay(now)) {
         debugPrint('📅 Not a working day, skipping auto check-in');
+
+        // Still check compliance on non-working days (for weekend reminders)
+        await _checkComplianceAndNotify();
+
         return Future.value(true);
       }
 
       // Check if already checked in today
       if (await _hasCheckedInToday()) {
         debugPrint('✅ Already checked in today, skipping');
+
+        // Still check compliance even if already checked in
+        await _checkComplianceAndNotify();
+
         return Future.value(true);
       }
 
@@ -428,6 +436,9 @@ Future<void> _performAutoCheckIn() async {
     // Show notification
     await NotificationService.showAutoCheckInNotification(date: now);
 
+    // Check compliance after successful check-in
+    await _checkComplianceAndNotify();
+
     debugPrint('🎉 Auto check-in completed successfully');
   } catch (e) {
     debugPrint('❌ Error performing auto check-in: $e');
@@ -502,4 +513,14 @@ double _calculateDistance(double lat1, double lng1, double lat2, double lng2) {
 
 double _degreesToRadians(double degrees) {
   return degrees * (math.pi / 180);
+}
+
+// Check compliance and send notification if needed
+Future<void> _checkComplianceAndNotify() async {
+  try {
+    debugPrint('🔔 Checking compliance for notifications');
+    await NotificationService.checkAndSendComplianceReminder();
+  } catch (e) {
+    debugPrint('❌ Failed to check compliance: $e');
+  }
 }

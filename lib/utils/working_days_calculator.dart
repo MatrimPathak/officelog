@@ -237,4 +237,109 @@ class WorkingDaysCalculator {
 
     return remainingWorkingDays;
   }
+
+  // Get total weeks in a month (for 3-day weekly rule)
+  // Only counts complete weeks (Monday to Sunday) that fall within the month
+  static int getTotalWeeksInMonth(int year, int month) {
+    final firstDay = DateTime(year, month, 1);
+
+    // Find the first Monday of the month (or the Monday of the week containing the first day)
+    DateTime firstMonday = firstDay;
+    while (firstMonday.weekday != DateTime.monday) {
+      firstMonday = firstMonday.add(const Duration(days: 1));
+      // If we go past the month while looking for first Monday, no complete weeks
+      if (firstMonday.month != month) {
+        return 0;
+      }
+    }
+
+    // Count complete weeks (7-day periods starting from Monday)
+    int completeWeeks = 0;
+    DateTime currentWeekStart = firstMonday;
+
+    while (currentWeekStart.month == month) {
+      // Check if the entire week (Monday to Sunday) falls within the month
+      final weekEnd = currentWeekStart.add(const Duration(days: 6)); // Sunday
+
+      if (weekEnd.month == month && weekEnd.year == year) {
+        completeWeeks++;
+        currentWeekStart = currentWeekStart.add(const Duration(days: 7));
+      } else {
+        break; // Week extends beyond the month
+      }
+    }
+
+    return completeWeeks;
+  }
+
+  // Get week number of year (ISO 8601)
+  static int getWeekOfYear(DateTime date) {
+    // Find the first Thursday of the year (ISO 8601 week 1)
+    final jan4 = DateTime(date.year, 1, 4);
+    final firstThursday = jan4.subtract(Duration(days: jan4.weekday - 4));
+
+    // Calculate days since first Thursday
+    final daysSinceFirstThursday = date.difference(firstThursday).inDays;
+
+    // Calculate week number
+    return (daysSinceFirstThursday / 7).floor() + 1;
+  }
+
+  // Calculate monthly compliance based on 3-day weekly rule
+  static Map<String, dynamic> calculateMonthlyCompliance(
+    int year,
+    int month,
+    List<DateTime> attendedDates,
+  ) {
+    final totalWeeks = getTotalWeeksInMonth(year, month);
+    final requiredDays = totalWeeks * 3;
+
+    // Filter attended dates to current month and working days only
+    final monthAttendedDays = attendedDates
+        .where(
+          (date) =>
+              date.year == year && date.month == month && isWorkingDay(date),
+        )
+        .length;
+
+    final stillNeeded = (requiredDays - monthAttendedDays)
+        .clamp(0, double.infinity)
+        .toInt();
+    final compliance = requiredDays > 0
+        ? (monthAttendedDays / requiredDays) * 100
+        : 0.0;
+
+    // Determine compliance status and color
+    String status;
+    String color;
+
+    if (compliance >= 60) {
+      status = 'good';
+      color = 'green';
+    } else if (compliance >= 55) {
+      status = 'borderline';
+      color = 'yellow';
+    } else {
+      status = 'poor';
+      color = 'red';
+    }
+
+    return {
+      'totalWeeks': totalWeeks,
+      'requiredDays': requiredDays,
+      'attendedDays': monthAttendedDays,
+      'stillNeeded': stillNeeded,
+      'compliance': compliance,
+      'status': status,
+      'color': color,
+    };
+  }
+
+  // Calculate current month compliance (for notifications)
+  static Map<String, dynamic> calculateCurrentMonthCompliance(
+    List<DateTime> attendedDates,
+  ) {
+    final now = DateTime.now();
+    return calculateMonthlyCompliance(now.year, now.month, attendedDates);
+  }
 }

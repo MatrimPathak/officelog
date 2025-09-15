@@ -13,7 +13,10 @@ class NotificationService {
 
   static const String _reminderTimeKey = 'reminder_time';
   static const String _reminderEnabledKey = 'reminder_enabled';
+  static const String _complianceReminderEnabledKey =
+      'compliance_reminder_enabled';
   static const int _dailyNotificationId = 1;
+  static const int _complianceNotificationId = 2;
 
   // Initialize the notification service
   static Future<void> initialize() async {
@@ -314,5 +317,99 @@ class NotificationService {
   static Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
     await _setReminderEnabled(false);
+  }
+
+  // Compliance notification methods
+
+  // Check and send compliance reminder if needed
+  static Future<void> checkAndSendComplianceReminder() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      // Check if compliance reminders are enabled
+      if (!await isComplianceReminderEnabled()) return;
+
+      final today = DateTime.now();
+
+      // Only check on working days
+      if (!WorkingDaysCalculator.isWorkingDay(today)) return;
+
+      // Get current month attendance data
+      final attendanceService = AttendanceService();
+      final attendedDates = await attendanceService.getMonthlyAttendance(
+        user.uid,
+        today.year,
+        today.month,
+      );
+
+      // Calculate compliance
+      final compliance = WorkingDaysCalculator.calculateCurrentMonthCompliance(
+        attendedDates,
+      );
+      final stillNeeded = compliance['stillNeeded'] as int;
+      final compliancePercent = compliance['compliance'] as double;
+
+      // Send notification if compliance is below 60% and still need more days
+      if (compliancePercent < 60 && stillNeeded > 0) {
+        await _sendComplianceReminderNotification(stillNeeded);
+      }
+    } catch (e) {
+      debugPrint('Failed to check compliance reminder: $e');
+    }
+  }
+
+  // Send compliance reminder notification
+  static Future<void> _sendComplianceReminderNotification(
+    int stillNeeded,
+  ) async {
+    try {
+      await _notifications.show(
+        _complianceNotificationId,
+        'Attendance Reminder',
+        'You still need $stillNeeded more days this month to meet 60% attendance.',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'compliance_reminder',
+            'Compliance Reminders',
+            channelDescription: 'Reminders when attendance compliance is low',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+            color: Colors.orange,
+            ledColor: Colors.orange,
+            ledOnMs: 1000,
+            ledOffMs: 500,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Failed to send compliance reminder notification: $e');
+    }
+  }
+
+  // Enable compliance reminders
+  static Future<void> enableComplianceReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_complianceReminderEnabledKey, true);
+  }
+
+  // Disable compliance reminders
+  static Future<void> disableComplianceReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_complianceReminderEnabledKey, false);
+    await _notifications.cancel(_complianceNotificationId);
+  }
+
+  // Check if compliance reminders are enabled
+  static Future<bool> isComplianceReminderEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_complianceReminderEnabledKey) ??
+        true; // Default to true
   }
 }

@@ -25,65 +25,25 @@ class AttendanceProvider with ChangeNotifier {
   bool get hasMarkedToday => _hasMarkedToday;
   DateTime? get selectedDate => _selectedDate;
 
-  // Calculate attendance stats for current month (working days only)
+  // Calculate attendance stats for current month (using 3-day weekly rule)
   Map<String, dynamic> get currentMonthStats {
     final now = DateTime.now();
-    final totalWorkingDays = WorkingDaysCalculator.getWorkingDaysInMonth(
+    return WorkingDaysCalculator.calculateMonthlyCompliance(
       now.year,
       now.month,
+      _attendedDates,
     );
-    final attendedWorkingDays = _attendedDates
-        .where(
-          (date) =>
-              date.year == now.year &&
-              date.month == now.month &&
-              WorkingDaysCalculator.isWorkingDay(date),
-        )
-        .length;
-    final percentage = totalWorkingDays > 0
-        ? (attendedWorkingDays / totalWorkingDays) * 100
-        : 0.0;
-
-    return {
-      'attendedDays': attendedWorkingDays,
-      'totalDays': totalWorkingDays,
-      'percentage': percentage,
-    };
   }
 
-  // Calculate attendance stats for a specific month (working days only)
+  // Calculate attendance stats for a specific month (using 3-day weekly rule)
   Map<String, dynamic> getMonthStats(int year, int month) {
-    final totalWorkingDays = WorkingDaysCalculator.getWorkingDaysInMonth(
+    final compliance = WorkingDaysCalculator.calculateMonthlyCompliance(
       year,
       month,
-    );
-    final attendedWorkingDays = _attendedDates
-        .where(
-          (date) =>
-              date.year == year &&
-              date.month == month &&
-              WorkingDaysCalculator.isWorkingDay(date),
-        )
-        .length;
-    final percentage = totalWorkingDays > 0
-        ? (attendedWorkingDays / totalWorkingDays) * 100
-        : 0.0;
-
-    // Calculate 60% target information
-    final targetInfo = _calculate60PercentTarget(
-      year,
-      month,
-      attendedWorkingDays,
+      _attendedDates,
     );
 
-    return {
-      'attendedDays': attendedWorkingDays,
-      'totalDays': totalWorkingDays,
-      'percentage': percentage,
-      'year': year,
-      'month': month,
-      'targetInfo': targetInfo,
-    };
+    return {...compliance, 'year': year, 'month': month};
   }
 
   // Calculate attendance stats for current quarter
@@ -95,18 +55,15 @@ class AttendanceProvider with ChangeNotifier {
     );
   }
 
-  // Calculate attendance stats for a specific quarter
+  // Calculate attendance stats for a specific quarter (using 3-day weekly rule)
   Map<String, dynamic> getQuarterStats(int year, int quarter) {
     final months = WorkingDaysCalculator.getQuarterMonths(quarter);
-    int totalWorkingDays = 0;
+    int totalWeeks = 0;
     int attendedWorkingDays = 0;
 
     // Calculate for each month in the quarter
     for (int month = months['start']!; month <= months['end']!; month++) {
-      totalWorkingDays += WorkingDaysCalculator.getWorkingDaysInMonth(
-        year,
-        month,
-      );
+      totalWeeks += WorkingDaysCalculator.getTotalWeeksInMonth(year, month);
 
       final monthAttendedDays = _attendedDates
           .where(
@@ -120,178 +77,40 @@ class AttendanceProvider with ChangeNotifier {
       attendedWorkingDays += monthAttendedDays;
     }
 
-    final percentage = totalWorkingDays > 0
-        ? (attendedWorkingDays / totalWorkingDays) * 100
+    final requiredDays = totalWeeks * 3;
+    final stillNeeded = (requiredDays - attendedWorkingDays)
+        .clamp(0, double.infinity)
+        .toInt();
+    final compliance = requiredDays > 0
+        ? (attendedWorkingDays / requiredDays) * 100
         : 0.0;
 
-    // Calculate 60% target information for the quarter
-    final targetInfo = _calculateQuarterly60PercentTarget(
-      year,
-      quarter,
-      attendedWorkingDays,
-    );
+    // Determine compliance status and color
+    String status;
+    String color;
+
+    if (compliance >= 60) {
+      status = 'good';
+      color = 'green';
+    } else if (compliance >= 55) {
+      status = 'borderline';
+      color = 'yellow';
+    } else {
+      status = 'poor';
+      color = 'red';
+    }
 
     return {
+      'totalWeeks': totalWeeks,
+      'requiredDays': requiredDays,
       'attendedDays': attendedWorkingDays,
-      'totalDays': totalWorkingDays,
-      'percentage': percentage,
+      'stillNeeded': stillNeeded,
+      'compliance': compliance,
+      'status': status,
+      'color': color,
       'year': year,
       'quarter': quarter,
       'quarterName': WorkingDaysCalculator.getQuarterNameWithRange(quarter),
-      'targetInfo': targetInfo,
-    };
-  }
-
-  // Calculate 60% target information
-  Map<String, dynamic> _calculate60PercentTarget(
-    int year,
-    int month,
-    int attendedDays,
-  ) {
-    final now = DateTime.now();
-
-    // Only calculate for current month or future months
-    final isCurrentMonth = year == now.year && month == now.month;
-    final isFutureMonth =
-        year > now.year || (year == now.year && month > now.month);
-
-    if (!isCurrentMonth && !isFutureMonth) {
-      // For past months, just show if target was met
-      final totalWorkingDays = WorkingDaysCalculator.getWorkingDaysInMonth(
-        year,
-        month,
-      );
-      final targetDays = (0.6 * totalWorkingDays).ceil();
-      return {
-        'status': attendedDays >= targetDays ? 'met' : 'missed',
-        'message': attendedDays >= targetDays
-            ? '✅ Target met'
-            : '❌ Target missed',
-        'color': attendedDays >= targetDays ? 'green' : 'red',
-        'daysNeeded': 0,
-        'targetDays': targetDays,
-      };
-    }
-
-    // For current month: A = Days Attended, W = Working Days so far, R = Remaining Working Days
-    final totalWorkingDays = WorkingDaysCalculator.getWorkingDaysInMonth(
-      year,
-      month,
-    );
-    final remainingWorkingDays = isCurrentMonth
-        ? WorkingDaysCalculator.getRemainingWorkingDaysInMonth(now)
-        : totalWorkingDays;
-
-    // Calculate X = ceil(0.6 × (W + R) - A)
-    final targetTotalDays = (0.6 * totalWorkingDays).ceil();
-    final daysNeeded = (targetTotalDays - attendedDays)
-        .clamp(0, double.infinity)
-        .toInt();
-
-    if (daysNeeded <= 0) {
-      return {
-        'status': 'met',
-        'message': '✅ Target met',
-        'color': 'green',
-        'daysNeeded': 0,
-        'targetDays': targetTotalDays,
-      };
-    }
-
-    if (daysNeeded > remainingWorkingDays) {
-      return {
-        'status': 'not_achievable',
-        'message': '❌ Not achievable this month',
-        'color': 'red',
-        'daysNeeded': daysNeeded,
-        'targetDays': targetTotalDays,
-        'remainingDays': remainingWorkingDays,
-      };
-    }
-
-    return {
-      'status': 'achievable',
-      'message': 'Required for 60%: $daysNeeded more days',
-      'color': 'yellow',
-      'daysNeeded': daysNeeded,
-      'targetDays': targetTotalDays,
-      'remainingDays': remainingWorkingDays,
-    };
-  }
-
-  // Calculate 60% target information for quarterly attendance
-  Map<String, dynamic> _calculateQuarterly60PercentTarget(
-    int year,
-    int quarter,
-    int attendedDays,
-  ) {
-    final now = DateTime.now();
-    final currentQuarter = WorkingDaysCalculator.getQuarter(now.month);
-    final isCurrentQuarter = year == now.year && quarter == currentQuarter;
-    final isFutureQuarter =
-        year > now.year || (year == now.year && quarter > currentQuarter);
-
-    if (!isCurrentQuarter && !isFutureQuarter) {
-      // For past quarters, just show if target was met
-      final totalWorkingDays = WorkingDaysCalculator.getWorkingDaysInQuarter(
-        year,
-        quarter,
-      );
-      final targetDays = (0.6 * totalWorkingDays).ceil();
-      return {
-        'status': attendedDays >= targetDays ? 'met' : 'missed',
-        'message': attendedDays >= targetDays
-            ? '✅ Target met'
-            : '❌ Target missed',
-        'color': attendedDays >= targetDays ? 'green' : 'red',
-        'daysNeeded': 0,
-        'targetDays': targetDays,
-      };
-    }
-
-    // For current quarter: calculate based on working days up to now
-    final totalWorkingDays = WorkingDaysCalculator.getWorkingDaysInQuarter(
-      year,
-      quarter,
-    );
-    final remainingWorkingDays = isCurrentQuarter
-        ? WorkingDaysCalculator.getRemainingWorkingDaysInQuarter(now)
-        : totalWorkingDays;
-
-    // Calculate X = ceil(0.6 × TotalWorkingDays - AttendedDays)
-    final targetTotalDays = (0.6 * totalWorkingDays).ceil();
-    final daysNeeded = (targetTotalDays - attendedDays)
-        .clamp(0, double.infinity)
-        .toInt();
-
-    if (daysNeeded <= 0) {
-      return {
-        'status': 'met',
-        'message': '✅ Target met',
-        'color': 'green',
-        'daysNeeded': 0,
-        'targetDays': targetTotalDays,
-      };
-    }
-
-    if (daysNeeded > remainingWorkingDays) {
-      return {
-        'status': 'not_achievable',
-        'message': '❌ Not achievable this quarter',
-        'color': 'red',
-        'daysNeeded': daysNeeded,
-        'targetDays': targetTotalDays,
-        'remainingDays': remainingWorkingDays,
-      };
-    }
-
-    return {
-      'status': 'achievable',
-      'message': '🎯 Need $daysNeeded more days',
-      'color': 'orange',
-      'daysNeeded': daysNeeded,
-      'targetDays': targetTotalDays,
-      'remainingDays': remainingWorkingDays,
     };
   }
 
