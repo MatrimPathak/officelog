@@ -109,13 +109,49 @@ jobs:
                   flutter pub deps
                   flutter doctor
 
-            - name: 🔧 Verify Firebase Configuration
+            - name: 🔧 Setup Firebase Configuration
               run: |
-                  echo "Checking for google-services.json..."
+                  echo "Setting up Firebase configuration for CI build..."
                   if [ ! -f "android/app/google-services.json" ]; then
-                    echo "⚠️ google-services.json not found - building without Firebase features"
-                    echo "This is normal for CI builds. Firebase features will be limited."
-                    echo "To enable full Firebase features, add google-services.json to the repository."
+                    echo "Creating minimal google-services.json for CI build..."
+                    cat > android/app/google-services.json << 'EOF'
+                  {
+                    "project_info": {
+                      "project_number": "000000000000",
+                      "project_id": "ci-build-project",
+                      "storage_bucket": "ci-build-project.appspot.com"
+                    },
+                    "client": [
+                      {
+                        "client_info": {
+                          "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                          "android_client_info": {
+                            "package_name": "com.matrimpathak.attendence_flutter"
+                          }
+                        },
+                        "oauth_client": [
+                          {
+                            "client_id": "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+                            "client_type": 3
+                          }
+                        ],
+                        "api_key": [
+                          {
+                            "current_key": "AIzaSyDummyKeyForCIBuild-XXXXXXXXXXXXXXX"
+                          }
+                        ],
+                        "services": {
+                          "appinvite_service": {
+                            "other_platform_oauth_client": []
+                          }
+                        }
+                      }
+                    ],
+                    "configuration_version": "1"
+                  }
+                  EOF
+                    echo "✅ Created minimal Firebase configuration for CI build"
+                    echo "⚠️ Note: This is a template config - Firebase features will be limited"
                   else
                     echo "✅ Firebase configuration file found"
                   fi
