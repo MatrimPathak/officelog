@@ -11,6 +11,8 @@ import '../services/settings_persistence_service.dart';
 import '../services/location_permission_service.dart';
 import '../services/feedback_service.dart';
 import '../themes/app_themes.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'dart:io';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -24,7 +26,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _reminderEnabled = false;
   bool _autoCheckInEnabled = false;
   bool _isLoading = true;
+  bool _isRefreshing = false;
   Map<String, dynamic>? _autoCheckInStatus;
+  DateTime? _lastRefresh;
 
   @override
   void initState() {
@@ -48,6 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _reminderEnabled = reminderEnabled;
         _autoCheckInEnabled = autoCheckInEnabled;
         _autoCheckInStatus = autoCheckInStatus;
+        _lastRefresh = DateTime.now();
         _isLoading = false;
       });
     } catch (e) {
@@ -115,6 +120,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _refreshServiceStatus() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      final status = await PersistentBackgroundService.getStatus();
+      setState(() {
+        _autoCheckInStatus = status;
+        _lastRefresh = DateTime.now();
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Service status refreshed'),
+            backgroundColor: AppThemes.getSuccessColor(context),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to refresh status: $e'),
+            backgroundColor: AppThemes.getErrorColor(context),
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isRefreshing = false;
+      });
+    }
+  }
+
   Future<void> _toggleAutoCheckIn(bool enabled) async {
     try {
       if (enabled) {
@@ -179,6 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         _autoCheckInEnabled = enabled;
         _autoCheckInStatus = status;
+        _lastRefresh = DateTime.now();
       });
 
       if (mounted) {
@@ -348,7 +391,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (_autoCheckInEnabled && _autoCheckInStatus != null) ...[
                     const Divider(),
                     ListTile(
-                      title: const Text('Service Status'),
+                      title: Row(
+                        children: [
+                          const Text('Service Status'),
+                          if (_lastRefresh != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '(${_formatDateTime(_lastRefresh)})',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.color,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -360,23 +420,126 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Text(
                               'Last auto check-in: ${_formatDateTime(_autoCheckInStatus!['lastAutoCheckIn'])}',
                             ),
-                          Text(
-                            'Background permission: ${_autoCheckInStatus!['hasBackgroundPermission'] == true ? '✅' : '❌'}',
+                          FutureBuilder<String>(
+                            future:
+                                LocationPermissionService.getPermissionStatusDescription(),
+                            builder: (context, snapshot) {
+                              final status = snapshot.data ?? 'Checking...';
+                              final isIdeal =
+                                  _autoCheckInStatus!['hasBackgroundPermission'] ==
+                                  true;
+                              return Text(
+                                'Location: ${isIdeal ? '✅' : '⚠️'} $status',
+                                style: TextStyle(
+                                  color: isIdeal ? null : Colors.orange,
+                                ),
+                              );
+                            },
                           ),
                           Text(
                             'Battery optimization: ${_autoCheckInStatus!['batteryOptimizationAsked'] == true ? 'Asked' : 'Not asked'}',
                           ),
+                          if (_autoCheckInStatus!['error'] != null)
+                            Text(
+                              'Error: ${_autoCheckInStatus!['error']}',
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          if (_autoCheckInStatus!['hasBackgroundPermission'] !=
+                              true)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.orange.shade900.withValues(
+                                          alpha: 0.3,
+                                        )
+                                      : Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.orange.shade600
+                                        : Colors.orange.shade200,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '💡 For best reliability:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.orange.shade300
+                                            : Colors.orange.shade800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '• Go to Settings > Apps > OfficeLog > Permissions\n'
+                                      '• Set Location to "Allow all the time"',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.orange.shade100
+                                            : Colors.orange.shade700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton(
+                                        onPressed: _openAppPermissionSettings,
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                          ),
+                                          side: BorderSide(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.orange.shade400
+                                                : Colors.orange.shade600,
+                                          ),
+                                          foregroundColor:
+                                              Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.orange.shade300
+                                              : Colors.orange.shade700,
+                                        ),
+                                        child: const Text(
+                                          'Open Permission Settings',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.refresh),
-                        onPressed: () async {
-                          final status =
-                              await PersistentBackgroundService.getStatus();
-                          setState(() {
-                            _autoCheckInStatus = status;
-                          });
-                        },
+                        icon: _isRefreshing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.refresh),
+                        onPressed: _isRefreshing ? null : _refreshServiceStatus,
                       ),
                     ),
 
@@ -1069,6 +1232,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           );
         }
+      }
+    }
+  }
+
+  Future<void> _openAppPermissionSettings() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      // Open the app's specific permission settings page
+      const AndroidIntent intent = AndroidIntent(
+        action: 'android.settings.APPLICATION_DETAILS_SETTINGS',
+        data: 'package:com.matrimpathak.attendence_flutter',
+      );
+      await intent.launch();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to open settings: $e'),
+            backgroundColor: AppThemes.getErrorColor(context),
+          ),
+        );
       }
     }
   }

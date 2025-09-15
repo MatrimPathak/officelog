@@ -201,14 +201,21 @@ class AttendanceService {
           .where((date) => WorkingDaysCalculator.isWorkingDay(date))
           .toList();
 
-      final attendancePercentage = totalWorkingDays > 0
-          ? (attendedWorkingDays.length / totalWorkingDays) * 100
-          : 0.0;
+      // Use 3-day weekly rule for compliance calculation
+      final monthStats = WorkingDaysCalculator.calculateMonthlyCompliance(
+        year,
+        month,
+        attendedDays,
+      );
 
       return {
         'attendedDays': attendedWorkingDays.length,
         'totalDays': totalWorkingDays,
-        'percentage': attendancePercentage,
+        'totalWeeks':
+            monthStats['totalWeeks'], // Add totalWeeks for summary screen
+        'requiredDays':
+            monthStats['requiredDays'], // Required days based on 3-day rule
+        'percentage': monthStats['compliance'], // Use 3-day rule compliance
         'dates': attendedWorkingDays,
       };
     } catch (e) {

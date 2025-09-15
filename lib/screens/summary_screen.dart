@@ -201,8 +201,14 @@ class _SummaryScreenState extends State<SummaryScreen> {
       0,
       (sum, month) => sum + (month['totalDays'] as int),
     );
-    final averagePercentage = totalWorkingDays > 0
-        ? (totalDaysAttended / totalWorkingDays) * 100
+
+    // Calculate overall attendance using 3-day weekly rule (now properly implemented in service)
+    final totalRequiredDays = _yearlyData.fold<int>(
+      0,
+      (sum, month) => sum + (month['requiredDays'] as int? ?? 0),
+    );
+    final averagePercentage = totalRequiredDays > 0
+        ? (totalDaysAttended / totalRequiredDays) * 100
         : 0.0;
 
     // Find best month
@@ -357,10 +363,11 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 quarter,
               );
 
-              final attendedDays = quarterStats['attendedDays'] as int;
-              final totalDays = quarterStats['totalDays'] as int;
-              final percentage = quarterStats['percentage'] as double;
-              final quarterName = quarterStats['quarterName'] as String;
+              final attendedDays = quarterStats['attendedDays'] as int? ?? 0;
+              final totalDays = quarterStats['requiredDays'] as int? ?? 0;
+              final percentage = quarterStats['compliance'] as double? ?? 0.0;
+              final quarterName =
+                  quarterStats['quarterName'] as String? ?? 'Q$quarter';
 
               // Determine color based on percentage
               Color percentageColor;

@@ -33,7 +33,7 @@ class BatteryOptimizationService {
       final AndroidIntent intent = AndroidIntent(
         action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
         data:
-            'package:com.example.attendence_flutter', // Replace with your actual package name
+            'package:com.matrimpathak.attendence_flutter', // Correct package name
       );
 
       await intent.launch();
@@ -160,7 +160,7 @@ class BatteryOptimizationService {
         case 'xiaomi':
           intent = const AndroidIntent(
             action: 'miui.intent.action.OP_AUTO_START',
-            data: 'package:com.example.attendence_flutter',
+            data: 'package:com.matrimpathak.attendence_flutter',
           );
           break;
         case 'huawei':
@@ -184,7 +184,7 @@ class BatteryOptimizationService {
         case 'samsung':
           intent = const AndroidIntent(
             action: 'android.settings.APPLICATION_DETAILS_SETTINGS',
-            data: 'package:com.example.attendence_flutter',
+            data: 'package:com.matrimpathak.attendence_flutter',
           );
           break;
         default:
