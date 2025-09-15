@@ -67,13 +67,19 @@ jobs:
                   if [ -n "$LAST_TAG" ]; then
                     LAST="${LAST_TAG#v}"
                     if [ "$LAST" = "$EXPECTED" ]; then
-                      echo "❌ Version $EXPECTED already exists. Bump the version.";
-                      exit 1
-                    fi
-                    TOP=$(printf "%s\n%s" "$LAST" "$EXPECTED" | sort -V | tail -n1)
-                    if [ "$TOP" != "$EXPECTED" ]; then
-                      echo "❌ Version $EXPECTED must be greater than last tag $LAST."
-                      exit 1
+                      echo "⚠️ Version $EXPECTED already exists as tag $LAST_TAG."
+                      if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                        echo "ℹ️ Manual dispatch - proceeding with existing tag"
+                      else
+                        echo "❌ Automatic trigger - cannot create duplicate tag. Bump the version."
+                        exit 1
+                      fi
+                    else
+                      TOP=$(printf "%s\n%s" "$LAST" "$EXPECTED" | sort -V | tail -n1)
+                      if [ "$TOP" != "$EXPECTED" ]; then
+                        echo "❌ Version $EXPECTED must be greater than last tag $LAST."
+                        exit 1
+                      fi
                     fi
                   fi
                   echo "✅ Version validation passed."
@@ -87,7 +93,7 @@ jobs:
             - name: 🐦 Set up Flutter
               uses: subosito/flutter-action@v2
               with:
-                  flutter-version: "3.35.3"
+                  flutter-version: "3.24.0"
                   channel: "stable"
                   cache: true
 
@@ -144,23 +150,12 @@ jobs:
                   echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
                   echo "BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
-            - name: 🏷️ Get Version Info
-              id: get_version
-              run: |
-                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-                    VERSION="${{ github.event.inputs.version }}"
-                  else
-                    VERSION="${GITHUB_REF#refs/tags/}"
-                  fi
-                  echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-                  echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
-                  echo "🏷️ Release version: $VERSION"
 
             - name: 📝 Generate Release Notes
               id: release_notes
               run: |
                   cat > release_notes.md << EOF
-                  ## 🎉 OfficeLog ${{ steps.get_version.outputs.VERSION }}
+                  ## 🎉 OfficeLog ${{ steps.version_info.outputs.VERSION }}
 
                   **Built on:** ${{ steps.build_info.outputs.BUILD_DATE }}
 
@@ -196,7 +191,7 @@ jobs:
 
                   ### 🔧 Technical Details
                   - **Package**: com.matrimpathak.attendence_flutter
-                  - **Version Name**: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+                  - **Version Name**: ${{ steps.version_info.outputs.VERSION_NUMBER }}
                   - **Version Code**: ${{ steps.build_info.outputs.VERSION_CODE }} (auto-calculated)
                   - **Built from**: Commit ${{ github.sha }}
                   - **Target SDK**: Android 14 (API 34)
@@ -206,8 +201,8 @@ jobs:
             - name: 🚀 Create GitHub Release
               uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ steps.get_version.outputs.VERSION }}
-                  name: 🏢 OfficeLog ${{ steps.get_version.outputs.VERSION }}
+                  tag_name: ${{ steps.version_info.outputs.VERSION }}
+                  name: 🏢 OfficeLog ${{ steps.version_info.outputs.VERSION }}
                   body_path: release_notes.md
                   draft: false
                   prerelease: ${{ github.event.inputs.prerelease == 'true' }}
@@ -220,7 +215,7 @@ jobs:
               uses: actions/upload-artifact@v4
               if: always()
               with:
-                  name: build-outputs-${{ steps.get_version.outputs.VERSION }}
+                  name: build-outputs-${{ steps.version_info.outputs.VERSION }}
                   path: |
                       build/app/outputs/flutter-apk/
                       build/app/outputs/bundle/
