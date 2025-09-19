@@ -6,6 +6,7 @@ import '../providers/theme_provider.dart';
 import '../services/notification_service.dart';
 import '../services/geolocation_service.dart';
 import '../services/persistent_background_service.dart';
+import '../services/simple_background_geofence_service.dart';
 import '../services/battery_optimization_service.dart';
 import '../services/settings_persistence_service.dart';
 import '../services/location_permission_service.dart';
@@ -188,9 +189,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           }
         }
 
-        // Start the persistent background service
-        final success = await PersistentBackgroundService.startAutoCheckIn();
-        if (!success) {
+        // Start both background services for better coverage
+        final persistentSuccess =
+            await PersistentBackgroundService.startAutoCheckIn();
+        final simpleSuccess =
+            await SimpleBackgroundGeofenceService.startMonitoring();
+
+        if (!persistentSuccess && !simpleSuccess) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -213,6 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       } else {
         await PersistentBackgroundService.stopAutoCheckIn();
+        await SimpleBackgroundGeofenceService.stopMonitoring();
       }
 
       // Reload status
@@ -229,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SnackBar(
             content: Text(
               enabled
-                  ? 'Auto Check-In enabled - works in background even after restart!'
+                  ? 'Auto Check-In enabled - monitoring every 5 minutes in foreground and 15 minutes in background!'
                   : 'Auto Check-In disabled',
             ),
             backgroundColor: AppThemes.getSuccessColor(context),

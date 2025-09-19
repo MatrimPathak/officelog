@@ -48,29 +48,70 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get web => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? 'your-web-api-key',
-    appId: dotenv.env['FIREBASE_WEB_APP_ID'] ?? 'your-web-app-id',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'your-sender-id',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? 'your-project-id',
-    authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? 'your-project-id.firebaseapp.com',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'your-project-id.appspot.com',
+    apiKey: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_WEB_API_KEY'] ?? 'your-web-api-key')
+        : 'your-web-api-key',
+    appId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_WEB_APP_ID'] ?? 'your-web-app-id')
+        : 'your-web-app-id',
+    messagingSenderId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'your-sender-id')
+        : 'your-sender-id',
+    projectId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_PROJECT_ID'] ?? 'your-project-id')
+        : 'your-project-id',
+    authDomain: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_AUTH_DOMAIN'] ??
+              'your-project-id.firebaseapp.com')
+        : 'your-project-id.firebaseapp.com',
+    storageBucket: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_STORAGE_BUCKET'] ??
+              'your-project-id.appspot.com')
+        : 'your-project-id.appspot.com',
   );
 
   static FirebaseOptions get android => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? 'your-android-api-key',
-    appId: dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? 'your-android-app-id',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'your-sender-id',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? 'your-project-id',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'your-project-id.appspot.com',
+    apiKey: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_ANDROID_API_KEY'] ??
+              'AIzaSyDIRPwrWHZ5aVfU4WSEuUj7WtS237z5DO4')
+        : 'AIzaSyDIRPwrWHZ5aVfU4WSEuUj7WtS237z5DO4',
+    appId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_ANDROID_APP_ID'] ??
+              '1:89886471430:android:0daf63b7dc13a70af75a87')
+        : '1:89886471430:android:0daf63b7dc13a70af75a87',
+    messagingSenderId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '89886471430')
+        : '89886471430',
+    projectId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_PROJECT_ID'] ?? 'pega-attendence')
+        : 'pega-attendence',
+    storageBucket: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_STORAGE_BUCKET'] ??
+              'pega-attendence.firebasestorage.app')
+        : 'pega-attendence.firebasestorage.app',
   );
 
   static FirebaseOptions get ios => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? 'your-ios-api-key',
-    appId: dotenv.env['FIREBASE_IOS_APP_ID'] ?? 'your-ios-app-id',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? 'your-sender-id',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? 'your-project-id',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'your-project-id.appspot.com',
-    iosBundleId: dotenv.env['IOS_BUNDLE_ID'] ?? 'com.yourcompany.yourapp',
+    apiKey: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_IOS_API_KEY'] ??
+              'AIzaSyAIUqXvYg7nKrYGLBSQdnrAHjEA3iEXUyE')
+        : 'AIzaSyAIUqXvYg7nKrYGLBSQdnrAHjEA3iEXUyE',
+    appId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_IOS_APP_ID'] ??
+              '1:89886471430:ios:97fd9294bbf99fccf75a87')
+        : '1:89886471430:ios:97fd9294bbf99fccf75a87',
+    messagingSenderId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '89886471430')
+        : '89886471430',
+    projectId: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_PROJECT_ID'] ?? 'pega-attendence')
+        : 'pega-attendence',
+    storageBucket: dotenv.isInitialized
+        ? (dotenv.env['FIREBASE_STORAGE_BUCKET'] ??
+              'pega-attendence.firebasestorage.app')
+        : 'pega-attendence.firebasestorage.app',
+    iosBundleId: dotenv.isInitialized
+        ? (dotenv.env['IOS_BUNDLE_ID'] ?? 'com.matrimpathak.attendenceFlutter')
+        : 'com.matrimpathak.attendenceFlutter',
   );
-
 }

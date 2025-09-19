@@ -179,7 +179,7 @@ class NotificationService {
     }
   }
 
-  // Show auto check-in notification
+  // Show auto check-in success notification
   static Future<void> showAutoCheckInNotification({DateTime? date}) async {
     try {
       final now = date ?? DateTime.now();
@@ -202,8 +202,8 @@ class NotificationService {
 
       await _notifications.show(
         999, // Unique ID for auto check-in notifications
-        '✅ Auto login successful',
-        'OfficeLog: Auto login complete for $dateStr, ${now.year}',
+        '✅ Auto Check-in Successful',
+        'OfficeLog: Attendance automatically logged for $dateStr, ${now.year} via geofence detection',
         const NotificationDetails(
           android: AndroidNotificationDetails(
             'auto_checkin',
@@ -227,6 +227,61 @@ class NotificationService {
       );
     } catch (e) {
       print('Failed to show auto check-in notification: $e');
+    }
+  }
+
+  // Show auto check-in failure notification
+  static Future<void> showAutoCheckInFailureNotification({
+    DateTime? date,
+    String? reason,
+  }) async {
+    try {
+      final now = date ?? DateTime.now();
+      final months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      final monthStr = months[now.month - 1];
+      final dateStr = '$monthStr ${now.day}';
+      final reasonText = reason ?? 'Location or network issue';
+
+      await _notifications.show(
+        998, // Unique ID for auto check-in failure notifications
+        '⚠️ Auto Check-in Failed',
+        'OfficeLog: Could not auto check-in for $dateStr, ${now.year}. Reason: $reasonText. Please check-in manually.',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'auto_checkin_failed',
+            'Auto Check-in Failed',
+            channelDescription:
+                'Notifications for failed automatic attendance check-in',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+            color: Colors.red, // Red color for failures
+            ledColor: Colors.red,
+            ledOnMs: 1000,
+            ledOffMs: 500,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Failed to show auto check-in failure notification: $e');
     }
   }
 

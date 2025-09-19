@@ -8,6 +8,7 @@ import '../widgets/attendance_calendar.dart';
 import '../widgets/office_log_logo.dart';
 import '../themes/app_themes.dart';
 import '../utils/working_days_calculator.dart';
+import '../utils/attendance_calculator.dart';
 import '../services/admin_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -187,54 +188,68 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Consumer<AttendanceProvider>(
                             builder: (context, attendanceProvider, child) {
-                              final stats = attendanceProvider.getMonthStats(
-                                _currentMonth.year,
-                                _currentMonth.month,
-                              );
-
-                              final monthNames = [
-                                'January',
-                                'February',
-                                'March',
-                                'April',
-                                'May',
-                                'June',
-                                'July',
-                                'August',
-                                'September',
-                                'October',
-                                'November',
-                                'December',
-                              ];
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${monthNames[_currentMonth.month - 1]} ${_currentMonth.year} Stats',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                              return FutureBuilder<Map<String, dynamic>>(
+                                future:
+                                    AttendanceCalculator.calculateAttendance(
+                                      _currentMonth.year,
+                                      _currentMonth.month,
+                                      attendanceProvider.attendedDates,
+                                    ),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(20.0),
+                                        child: CircularProgressIndicator(),
                                       ),
-                                      TextButton(
-                                        onPressed: () => Navigator.of(
-                                          context,
-                                        ).pushNamed('/summary'),
-                                        child: const Text('View Summary'),
+                                    );
+                                  }
+
+                                  if (snapshot.hasError) {
+                                    return Center(
+                                      child: Text(
+                                        'Error loading stats: ${snapshot.error}',
+                                      ),
+                                    );
+                                  }
+
+                                  final stats = snapshot.data ?? {};
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${AttendanceCalculator.getMonthName(_currentMonth.month)} ${_currentMonth.year} Stats',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.of(
+                                              context,
+                                            ).pushNamed('/summary'),
+                                            child: const Text('View Summary'),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      // Monthly Compliance Card
+                                      _buildMonthlyComplianceCard(
+                                        context,
+                                        stats,
                                       ),
                                     ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Monthly Compliance Card
-                                  _buildMonthlyComplianceCard(context, stats),
-                                ],
+                                  );
+                                },
                               );
                             },
                           ),
@@ -395,23 +410,20 @@ class _HomeScreenState extends State<HomeScreen> {
     BuildContext context,
     Map<String, dynamic> stats,
   ) {
-    // Get color based on compliance status
-    Color getComplianceColor() {
-      switch (stats['color']) {
-        case 'green':
-          return Colors.green;
-        case 'yellow':
-          return Colors.orange;
-        case 'red':
-          return Colors.red;
-        default:
-          return Colors.grey;
+    // Get color based on attendance percentage
+    Color getComplianceColor(double percentage) {
+      if (percentage >= 80) {
+        return AppThemes.getSuccessColor(context);
+      } else if (percentage >= 60) {
+        return Colors.orange;
+      } else {
+        return AppThemes.getErrorColor(context);
       }
     }
 
     // Get icon based on compliance status
-    IconData getComplianceIcon() {
-      switch (stats['status']) {
+    IconData getComplianceIcon(String compliance) {
+      switch (compliance) {
         case 'good':
           return Icons.check_circle;
         case 'borderline':
@@ -423,13 +435,14 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    final color = getComplianceColor();
-    final icon = getComplianceIcon();
-    final compliance = stats['compliance'] as double;
+    final percentage = stats['attendancePercentage'] as double;
+    final compliance = stats['compliance'] as String;
+    final color = getComplianceColor(percentage);
+    final icon = getComplianceIcon(compliance);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -453,13 +466,15 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(icon, color: color, size: 20),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+
+          // Main stats row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildComplianceItem(
                 context,
-                'Required Days',
+                'Required',
                 '${stats['requiredDays']}',
                 Colors.blue,
               ),
@@ -467,17 +482,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 'Attended',
                 '${stats['attendedDays']}',
-                Colors.green,
+                AppThemes.getSuccessColor(context),
               ),
               _buildComplianceItem(
                 context,
-                'Still Needed',
-                '${stats['stillNeeded']}',
-                stats['stillNeeded'] > 0 ? Colors.orange : Colors.green,
+                'Remaining',
+                '${stats['remainingDays']}',
+                stats['remainingDays'] > 0
+                    ? Colors.orange
+                    : AppThemes.getSuccessColor(context),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+
+          const SizedBox(height: 20),
+
+          // Progress section
           Row(
             children: [
               Expanded(
@@ -485,16 +505,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Compliance',
+                      'Progress',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: color.withValues(alpha: 0.8),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Text(
-                          '${compliance.toStringAsFixed(1)}%',
+                          '${percentage.toStringAsFixed(1)}%',
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -502,9 +522,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                         ),
                         const SizedBox(width: 8),
-                        if (compliance >= 60)
+                        if (percentage >= 60)
                           const Text('✅', style: TextStyle(fontSize: 16))
-                        else if (compliance >= 55)
+                        else if (percentage >= 55)
                           const Text('⚠️', style: TextStyle(fontSize: 16))
                         else
                           const Text('❌', style: TextStyle(fontSize: 16)),
@@ -523,9 +543,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  compliance >= 60
+                  percentage >= 60
                       ? 'On Track'
-                      : compliance >= 55
+                      : percentage >= 55
                       ? 'Borderline'
                       : 'Behind',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -768,33 +788,29 @@ class _HomeScreenState extends State<HomeScreen> {
                             Icon(Icons.location_on, color: Colors.green),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
-                                'You are at the office',
-                                style: TextStyle(
-                                  color: Colors.green[700],
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'You are at the office location',
+                                    style: TextStyle(
+                                      color: Colors.green[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    statusData['canAutoCheckIn']
+                                        ? 'Auto check-in will happen automatically if enabled in settings'
+                                        : 'Already checked in today',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.green[600],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            if (statusData['canAutoCheckIn'])
-                              TextButton(
-                                onPressed: () async {
-                                  final success = await attendanceProvider
-                                      .tryAutoCheckIn();
-                                  if (success && mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: const Text(
-                                          'Auto check-in successful!',
-                                        ),
-                                        backgroundColor:
-                                            AppThemes.getSuccessColor(context),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text('Auto Check-in'),
-                              ),
                           ],
                         ),
                       ),

@@ -61,10 +61,11 @@ void main() async {
   // Initialize persistent background service
   await PersistentBackgroundService.initialize();
 
-  // Restart auto check-in service if it was enabled before app restart
+  // Restart auto check-in services if they were enabled before app restart
   if (await PersistentBackgroundService.isAutoCheckInEnabled()) {
     await PersistentBackgroundService.startAutoCheckIn();
-    print('✅ Auto check-in service restarted after app launch');
+    await SimpleBackgroundGeofenceService.startMonitoring();
+    print('✅ Auto check-in services restarted after app launch');
   }
 
   // Initialize default data

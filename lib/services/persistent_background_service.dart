@@ -57,7 +57,7 @@ class PersistentBackgroundService {
         _taskName,
         frequency: const Duration(
           minutes: 15,
-        ), // Minimum allowed by WorkManager
+        ), // Note: WorkManager minimum is 15 minutes, but we'll add foreground service for better frequency
         constraints: Constraints(
           networkType: NetworkType.unmetered, // Works offline and on WiFi
           requiresBatteryNotLow: false,
