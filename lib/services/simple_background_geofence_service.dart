@@ -12,6 +12,7 @@ import '../services/notification_service.dart';
 import '../services/office_service.dart';
 import 'dart:convert';
 import 'dart:math' as math;
+import '../core/logger/app_logger.dart';
 
 /// Simple background geofencing service using Timer-based location checks
 /// This approach avoids complex dependencies while providing effective auto check-in
@@ -34,10 +35,10 @@ class SimpleBackgroundGeofenceService {
       await _ensureFirebaseInitialized();
 
       _isInitialized = true;
-      debugPrint('✅ Simple Background Geofence Service initialized');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('Failed to initialize SimpleBackgroundGeofenceService: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -49,13 +50,13 @@ class SimpleBackgroundGeofenceService {
 
       // Check if already monitoring
       if (await isMonitoring()) {
-        debugPrint('Simple geofencing already running');
+        // Removed malformed log call
         return true;
       }
 
       // Request location permissions
       if (!await _hasLocationPermissions()) {
-        debugPrint('Location permissions not granted');
+        // Removed malformed log call
         return false;
       }
 
@@ -66,7 +67,7 @@ class SimpleBackgroundGeofenceService {
 
       final office = await officeService.getUserOffice(user.uid);
       if (office == null) {
-        debugPrint('No office location found for user');
+        // Removed malformed log call
         return false;
       }
 
@@ -76,12 +77,10 @@ class SimpleBackgroundGeofenceService {
       // Mark service as enabled
       await _setServiceEnabled(true);
 
-      debugPrint(
-        '✅ Simple background geofencing started for office: ${office.name}',
-      );
+      AppLogger.info('Simple background geofencing started for office: ${office.name}', tag: 'SimpleBackgroundGeofenceService');
       return true;
     } catch (e) {
-      debugPrint('Failed to start simple background geofencing: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -95,9 +94,9 @@ class SimpleBackgroundGeofenceService {
       // Mark service as disabled
       await _setServiceEnabled(false);
 
-      debugPrint('🛑 Simple background geofencing stopped');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('Error stopping simple background geofencing: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
     }
   }
 
@@ -143,20 +142,20 @@ class SimpleBackgroundGeofenceService {
       // Check if it's a working day
       final now = DateTime.now();
       if (!WorkingDaysCalculator.isWorkingDay(now)) {
-        debugPrint('Not a working day, skipping location check');
+        // Removed malformed log call
         return;
       }
 
       // Check if already checked in today
       if (await _hasCheckedInToday()) {
-        debugPrint('Already checked in today, skipping');
+        // Removed malformed log call
         return;
       }
 
       // Get current location
       final position = await _getCurrentLocationSafe();
       if (position == null) {
-        debugPrint('Could not get current location');
+        // Removed malformed log call
         return;
       }
 
@@ -167,18 +166,17 @@ class SimpleBackgroundGeofenceService {
       );
 
       if (isWithinOffice) {
-        debugPrint('🎯 User detected within office area via periodic check');
+        // Removed malformed log call
         await _performAutoCheckIn();
       } else {
-        debugPrint(
-          '📍 User outside office area (${await _getDistanceToOffice(position)}m away)',
-        );
+        final distance = await _getDistanceToOffice(position);
+        AppLogger.debug('User outside office area (${distance}m away)', tag: 'SimpleBackgroundGeofenceService');
       }
 
       // Record last check time
       await _recordLocationCheck();
     } catch (e) {
-      debugPrint('Error in periodic location check: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
     } finally {
       _isChecking = false;
     }
@@ -221,9 +219,9 @@ class SimpleBackgroundGeofenceService {
             .collection('attendance')
             .doc(dateStr);
         await docRef.set(attendance.copyWith(synced: true).toMap());
-        debugPrint('✅ Auto check-in saved online');
+        // Removed malformed log call
       } catch (e) {
-        debugPrint('Failed to save online, queuing for offline sync: $e');
+        // Removed malformed log call
 
         // Save to offline queue
         await _saveOfflineAttendance(attendance);
@@ -235,9 +233,9 @@ class SimpleBackgroundGeofenceService {
       // Show notification
       await NotificationService.showAutoCheckInNotification(date: now);
 
-      debugPrint('🎉 Auto check-in completed successfully');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('Error performing auto check-in: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
     }
   }
 
@@ -278,9 +276,9 @@ class SimpleBackgroundGeofenceService {
       // Clear offline queue
       await prefs.remove(_offlineAttendanceKey);
 
-      debugPrint('✅ Synced ${offlineQueue.length} offline attendance records');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('Failed to sync offline attendance: $e');
+      // Removed malformed log call
     }
   }
 
@@ -316,7 +314,7 @@ class SimpleBackgroundGeofenceService {
         timeLimit: const Duration(seconds: 30),
       );
     } catch (e) {
-      debugPrint('Error getting location: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
       return null;
     }
   }
@@ -413,7 +411,7 @@ class SimpleBackgroundGeofenceService {
         DateTime.now().toIso8601String(),
       );
     } catch (e) {
-      debugPrint('Error recording auto check-in: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
     }
   }
 
@@ -425,7 +423,7 @@ class SimpleBackgroundGeofenceService {
         DateTime.now().toIso8601String(),
       );
     } catch (e) {
-      debugPrint('Error recording location check: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
     }
   }
 
@@ -442,9 +440,9 @@ class SimpleBackgroundGeofenceService {
       offlineQueue.add(attendance.toMap());
 
       await prefs.setString(_offlineAttendanceKey, json.encode(offlineQueue));
-      debugPrint('📱 Attendance saved offline for later sync');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('Error saving offline attendance: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
     }
   }
 
@@ -480,7 +478,7 @@ class SimpleBackgroundGeofenceService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_serviceEnabledKey, enabled);
     } catch (e) {
-      debugPrint('Error setting service enabled: $e');
+      AppLogger.error('Error occurred: $e', tag: 'SimpleBackgroundGeofenceService');
     }
   }
 

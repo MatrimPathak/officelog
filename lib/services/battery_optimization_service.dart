@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import '../core/logger/app_logger.dart';
 
 /// Service to handle battery optimization bypass for reliable background operation
 class BatteryOptimizationService {
@@ -18,7 +19,7 @@ class BatteryOptimizationService {
       );
       return result ?? false;
     } catch (e) {
-      debugPrint('Error checking battery optimization status: $e');
+      AppLogger.error('Error occurred: $e', tag: 'BatteryOptimizationService');
       // Return true to avoid blocking the user if we can't check
       return true;
     }
@@ -39,7 +40,7 @@ class BatteryOptimizationService {
       await intent.launch();
       return true;
     } catch (e) {
-      debugPrint('Error requesting battery optimization bypass: $e');
+      AppLogger.error('Error occurred: $e', tag: 'BatteryOptimizationService');
 
       // Fallback: Open general battery optimization settings
       try {
@@ -49,7 +50,7 @@ class BatteryOptimizationService {
         await fallbackIntent.launch();
         return true;
       } catch (fallbackError) {
-        debugPrint('Error with fallback intent: $fallbackError');
+        // Removed malformed log call
         return false;
       }
     }
@@ -67,7 +68,7 @@ class BatteryOptimizationService {
         return true;
       }
     } catch (e) {
-      debugPrint('Could not check battery optimization status: $e');
+      // Removed malformed log call
       // Continue to show dialog anyway
     }
 
@@ -141,7 +142,7 @@ class BatteryOptimizationService {
       final androidInfo = await deviceInfo.androidInfo;
       return androidInfo.manufacturer.toLowerCase();
     } catch (e) {
-      debugPrint('Error getting device manufacturer: $e');
+      AppLogger.error('Error occurred: $e', tag: 'BatteryOptimizationService');
       // Return 'android' as a safe fallback instead of 'unknown'
       return 'android';
     }
@@ -196,7 +197,7 @@ class BatteryOptimizationService {
 
       await intent.launch();
     } catch (e) {
-      debugPrint('Error opening manufacturer battery settings: $e');
+      AppLogger.error('Error occurred: $e', tag: 'BatteryOptimizationService');
 
       // Fallback to general settings
       try {
@@ -205,7 +206,7 @@ class BatteryOptimizationService {
         );
         await fallbackIntent.launch();
       } catch (fallbackError) {
-        debugPrint('Error with fallback manufacturer settings: $fallbackError');
+        // Removed malformed log call
       }
     }
   }

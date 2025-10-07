@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/logger/app_logger.dart';
 
 class ThemeProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
@@ -36,7 +37,7 @@ class ThemeProvider with ChangeNotifier {
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
-      debugPrint('Failed to initialize theme: $e');
+      AppLogger.error('Failed to initialize theme: $e', tag: 'ThemeProvider');
       _isInitialized = true;
       notifyListeners();
     }
@@ -64,7 +65,7 @@ class ThemeProvider with ChangeNotifier {
 
       await prefs.setString('theme_mode', themeName);
     } catch (e) {
-      debugPrint('Failed to save theme preference: $e');
+      AppLogger.error('Failed to save theme preference: $e', tag: 'ThemeProvider');
     }
   }
 

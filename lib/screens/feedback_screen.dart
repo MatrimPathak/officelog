@@ -70,7 +70,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 8),
-                Text('✅ Thank you for your feedback!'),
+                Text('Thank you for your feedback!'),
               ],
             ),
             backgroundColor: AppThemes.getSuccessColor(context),
@@ -150,11 +150,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         const SizedBox(height: 8),
                         Text(
                           'Help us improve OfficeLog by sharing your thoughts, suggestions, or reporting issues.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey.shade300
-                                : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade300
+                                    : Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.color
+                                          ?.withValues(alpha: 0.7),
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -304,11 +311,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         const SizedBox(height: 8),
                         Text(
                           '* Required field',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey.shade400
-                                : Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.color
+                                          ?.withValues(alpha: 0.6),
+                              ),
                         ),
                       ],
                     ),
@@ -323,7 +337,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   child: ElevatedButton(
                     onPressed: _isSubmitting ? null : _submitFeedback,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      backgroundColor:
+                          Theme.of(context).brightness == Brightness.dark
                           ? Colors.blue.shade600
                           : Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
@@ -380,7 +395,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     border: Border.all(
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.blue.shade600
-                          : Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                          : Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
@@ -396,11 +413,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       Expanded(
                         child: Text(
                           'Your feedback helps us improve OfficeLog. We respect your privacy and will only use this information to enhance the app.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.blue.shade100
-                                : Theme.of(context).primaryColor,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.blue.shade100
+                                    : Theme.of(context).primaryColor,
+                              ),
                         ),
                       ),
                     ],

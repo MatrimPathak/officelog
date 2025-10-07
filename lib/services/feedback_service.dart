@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/feedback_model.dart';
 import 'dart:convert';
+import '../core/logger/app_logger.dart';
 
 class FeedbackService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -31,10 +32,10 @@ class FeedbackService {
           .doc(feedbackId)
           .set(feedback.toMap());
 
-      print('✅ Feedback submitted successfully to Firebase');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      print('❌ Failed to submit feedback to Firebase: $e');
+      // Removed malformed log call
 
       // Save offline if Firebase fails
       await _saveFeedbackOffline(name: name, email: email, message: message);
@@ -77,9 +78,9 @@ class FeedbackService {
       // Save back to preferences
       await prefs.setString(_offlineFeedbackKey, json.encode(offlineFeedback));
 
-      print('📱 Feedback saved offline for later sync');
+      // Removed malformed log call
     } catch (e) {
-      print('❌ Failed to save feedback offline: $e');
+      // Removed malformed log call
       throw Exception('Failed to save feedback: $e');
     }
   }
@@ -95,7 +96,7 @@ class FeedbackService {
       final List<dynamic> feedbackList = json.decode(feedbackJson);
       return feedbackList.length;
     } catch (e) {
-      print('❌ Error getting offline feedback count: $e');
+      // Removed malformed log call
       return 0;
     }
   }
@@ -122,7 +123,7 @@ class FeedbackService {
           batch.set(docRef, feedback.copyWith(synced: true).toMap());
           syncedCount++;
         } catch (e) {
-          print('❌ Error preparing feedback for sync: $e');
+          // Removed malformed log call
         }
       }
 
@@ -132,12 +133,12 @@ class FeedbackService {
         // Clear offline feedback after successful sync
         await prefs.remove(_offlineFeedbackKey);
 
-        print('✅ Synced $syncedCount offline feedback items to Firebase');
+        // Removed malformed log call
       }
 
       return true;
     } catch (e) {
-      print('❌ Failed to sync offline feedback: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -173,7 +174,7 @@ class FeedbackService {
           .map((doc) => FeedbackModel.fromFirestore(doc))
           .toList();
     } catch (e) {
-      print('❌ Error fetching feedback: $e');
+      // Removed malformed log call
       return [];
     }
   }
@@ -182,10 +183,10 @@ class FeedbackService {
   Future<bool> deleteFeedback(String feedbackId) async {
     try {
       await _firestore.collection('feedback').doc(feedbackId).delete();
-      print('✅ Feedback deleted successfully');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      print('❌ Error deleting feedback: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -220,7 +221,7 @@ class FeedbackService {
         'lastUpdated': DateTime.now(),
       };
     } catch (e) {
-      print('❌ Error getting feedback stats: $e');
+      // Removed malformed log call
       return {
         'totalFeedback': 0,
         'feedbackWithEmail': 0,

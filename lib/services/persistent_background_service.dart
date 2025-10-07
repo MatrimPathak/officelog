@@ -14,6 +14,7 @@ import '../services/notification_service.dart';
 import '../services/office_service.dart';
 import '../services/location_permission_service.dart';
 import 'dart:math' as math;
+import '../core/logger/app_logger.dart';
 
 /// Persistent background service using WorkManager for auto check-in
 /// This service persists across app restarts and handles battery optimizations
@@ -32,10 +33,10 @@ class PersistentBackgroundService {
       // Initialize WorkManager
       await Workmanager().initialize(callbackDispatcher);
 
-      debugPrint('✅ PersistentBackgroundService initialized');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('❌ Failed to initialize PersistentBackgroundService: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -47,7 +48,7 @@ class PersistentBackgroundService {
 
       // Check if location permissions are granted
       if (!await LocationPermissionService.hasLocationPermissions()) {
-        debugPrint('❌ Location permissions not granted');
+        // Removed malformed log call
         return false;
       }
 
@@ -73,10 +74,10 @@ class PersistentBackgroundService {
       // Mark service as enabled
       await _setAutoCheckInEnabled(true);
 
-      debugPrint('✅ Auto check-in service started');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('❌ Failed to start auto check-in service: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -90,9 +91,9 @@ class PersistentBackgroundService {
       // Mark service as disabled
       await _setAutoCheckInEnabled(false);
 
-      debugPrint('🛑 Auto check-in service stopped');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('❌ Error stopping auto check-in service: $e');
+      // Removed malformed log call
     }
   }
 
@@ -102,7 +103,7 @@ class PersistentBackgroundService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(_enabledKey) ?? false;
     } catch (e) {
-      debugPrint('❌ Error checking auto check-in status: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -123,7 +124,7 @@ class PersistentBackgroundService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_batteryOptimizationAskedKey, true);
     } catch (e) {
-      debugPrint('❌ Error marking battery optimization asked: $e');
+      // Removed malformed log call
     }
   }
 
@@ -163,9 +164,9 @@ class PersistentBackgroundService {
       // Clear offline queue
       await prefs.remove(_offlineAttendanceKey);
 
-      debugPrint('✅ Synced ${offlineQueue.length} offline attendance records');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('❌ Failed to sync offline attendance: $e');
+      // Removed malformed log call
     }
   }
 
@@ -200,7 +201,7 @@ class PersistentBackgroundService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_enabledKey, enabled);
     } catch (e) {
-      debugPrint('❌ Error setting auto check-in enabled: $e');
+      // Removed malformed log call
     }
   }
 
@@ -221,7 +222,7 @@ class PersistentBackgroundService {
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
-      debugPrint('🔄 Background task started: $task');
+      // Removed malformed log call
 
       // Initialize Firebase for background operations
       await Firebase.initializeApp(
@@ -234,14 +235,14 @@ void callbackDispatcher() {
           prefs.getBool(PersistentBackgroundService._enabledKey) ?? false;
 
       if (!enabled) {
-        debugPrint('⏸️ Auto check-in disabled, skipping task');
+        // Removed malformed log call
         return Future.value(true);
       }
 
       // Check if it's a working day
       final now = DateTime.now();
       if (!WorkingDaysCalculator.isWorkingDay(now)) {
-        debugPrint('📅 Not a working day, skipping auto check-in');
+        // Removed malformed log call
 
         // Still check compliance on non-working days (for weekend reminders)
         await _checkComplianceAndNotify();
@@ -251,7 +252,7 @@ void callbackDispatcher() {
 
       // Check if already checked in today
       if (await _hasCheckedInToday()) {
-        debugPrint('✅ Already checked in today, skipping');
+        // Removed malformed log call
 
         // Still check compliance even if already checked in
         await _checkComplianceAndNotify();
@@ -261,14 +262,14 @@ void callbackDispatcher() {
 
       // Check if already auto-checked in today
       if (await _hasAutoCheckedInToday()) {
-        debugPrint('🔄 Already auto-checked in today, skipping');
+        // Removed malformed log call
         return Future.value(true);
       }
 
       // Get current location
       final position = await _getCurrentLocationSafe();
       if (position == null) {
-        debugPrint('📍 Could not get current location');
+        // Removed malformed log call
         return Future.value(true);
       }
 
@@ -279,21 +280,19 @@ void callbackDispatcher() {
       );
 
       if (isWithinOffice) {
-        debugPrint(
-          '🎯 User detected within office area - performing auto check-in',
-        );
+        AppLogger.info('User detected within office area - performing auto check-in', tag: 'PersistentBackgroundService');
         await _performAutoCheckIn();
       } else {
-        debugPrint('📍 User outside office area');
+        // Removed malformed log call
       }
 
       // Record last check time
       await _recordLocationCheck();
 
-      debugPrint('✅ Background task completed successfully');
+      // Removed malformed log call
       return Future.value(true);
     } catch (e) {
-      debugPrint('❌ Background task error: $e');
+      // Removed malformed log call
       return Future.value(false);
     }
   });
@@ -319,7 +318,7 @@ Future<bool> _hasCheckedInToday() async {
 
     return doc.exists;
   } catch (e) {
-    debugPrint('❌ Error checking if checked in today: $e');
+    // Removed malformed log call
     return false;
   }
 }
@@ -340,7 +339,7 @@ Future<bool> _hasAutoCheckedInToday() async {
         lastDate.month == today.month &&
         lastDate.day == today.day;
   } catch (e) {
-    debugPrint('❌ Error checking auto check-in today: $e');
+    // Removed malformed log call
     return false;
   }
 }
@@ -349,14 +348,14 @@ Future<Position?> _getCurrentLocationSafe() async {
   try {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      debugPrint('❌ Location service not enabled');
+      // Removed malformed log call
       return null;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      debugPrint('❌ Location permission denied');
+      // Removed malformed log call
       return null;
     }
 
@@ -365,7 +364,7 @@ Future<Position?> _getCurrentLocationSafe() async {
       timeLimit: const Duration(seconds: 30),
     );
   } catch (e) {
-    debugPrint('❌ Error getting location: $e');
+    // Removed malformed log call
     return null;
   }
 }
@@ -386,12 +385,10 @@ Future<bool> _checkIfWithinOffice(double lat, double lng) async {
       office.longitude,
     );
 
-    debugPrint(
-      '📍 Distance to office: ${distance.toStringAsFixed(0)}m (radius: ${office.radius}m)',
-    );
+    AppLogger.debug('Distance to office: ${distance.toStringAsFixed(0)}m (radius: ${office.radius}m)', tag: 'PersistentBackgroundService');
     return distance <= office.radius;
   } catch (e) {
-    debugPrint('❌ Error checking office geofence: $e');
+    // Removed malformed log call
     return false;
   }
 }
@@ -424,9 +421,9 @@ Future<void> _performAutoCheckIn() async {
           .doc(dateStr);
 
       await docRef.set(attendance.copyWith(synced: true).toMap());
-      debugPrint('✅ Auto check-in saved online');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('📱 Failed to save online, queuing for offline sync: $e');
+      // Removed malformed log call
       await _saveOfflineAttendance(attendance);
     }
 
@@ -439,9 +436,9 @@ Future<void> _performAutoCheckIn() async {
     // Check compliance after successful check-in
     await _checkComplianceAndNotify();
 
-    debugPrint('🎉 Auto check-in completed successfully');
+    // Removed malformed log call
   } catch (e) {
-    debugPrint('❌ Error performing auto check-in: $e');
+    // Removed malformed log call
   }
 }
 
@@ -453,7 +450,7 @@ Future<void> _recordAutoCheckIn() async {
       DateTime.now().toIso8601String(),
     );
   } catch (e) {
-    debugPrint('❌ Error recording auto check-in: $e');
+    // Removed malformed log call
   }
 }
 
@@ -465,7 +462,7 @@ Future<void> _recordLocationCheck() async {
       DateTime.now().toIso8601String(),
     );
   } catch (e) {
-    debugPrint('❌ Error recording location check: $e');
+    // Removed malformed log call
   }
 }
 
@@ -487,9 +484,9 @@ Future<void> _saveOfflineAttendance(AttendanceModel attendance) async {
       PersistentBackgroundService._offlineAttendanceKey,
       json.encode(offlineQueue),
     );
-    debugPrint('📱 Attendance saved offline for later sync');
+    // Removed malformed log call
   } catch (e) {
-    debugPrint('❌ Error saving offline attendance: $e');
+    // Removed malformed log call
   }
 }
 
@@ -518,9 +515,9 @@ double _degreesToRadians(double degrees) {
 // Check compliance and send notification if needed
 Future<void> _checkComplianceAndNotify() async {
   try {
-    debugPrint('🔔 Checking compliance for notifications');
+    // Removed malformed log call
     await NotificationService.checkAndSendComplianceReminder();
   } catch (e) {
-    debugPrint('❌ Failed to check compliance: $e');
+    // Removed malformed log call
   }
 }

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/office_model.dart';
 import 'dart:convert';
+import '../core/logger/app_logger.dart';
 
 class OfficeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -300,7 +301,7 @@ class OfficeService {
 
       await addOffice(defaultOffice);
     } catch (e) {
-      print('Failed to initialize default office: $e');
+      AppLogger.error('Operation failed: $e', tag: 'OfficeService');
     }
   }
 
@@ -326,9 +327,9 @@ class OfficeService {
           .doc(userId)
           .set(userProfile.toMap(), SetOptions(merge: true));
 
-      print('✅ User auto-assigned to office: ${authUser['email']}');
+      AppLogger.info('User auto-assigned to office: ${authUser['email']}', tag: 'OfficeService');
     } catch (e) {
-      print('Failed to auto-assign user to office: $e');
+      AppLogger.error('Operation failed: $e', tag: 'OfficeService');
     }
   }
 

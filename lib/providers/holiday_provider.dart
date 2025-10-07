@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/holiday_model.dart';
 import '../services/holiday_service.dart';
+import '../core/logger/app_logger.dart';
 
 class HolidayProvider with ChangeNotifier {
   final HolidayService _holidayService = HolidayService();
@@ -186,7 +187,7 @@ class HolidayProvider with ChangeNotifier {
       await _holidayService.initializeDefaultHolidays();
       await loadHolidays();
     } catch (e) {
-      print('Failed to initialize holidays: $e');
+      AppLogger.error('Operation failed: $e', tag: 'HolidayProvider');
     }
   }
 

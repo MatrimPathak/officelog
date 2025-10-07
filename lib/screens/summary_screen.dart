@@ -20,7 +20,50 @@ class _SummaryScreenState extends State<SummaryScreen> {
   @override
   void initState() {
     super.initState();
-    _loadYearlyData();
+    _loadAttendanceData();
+  }
+
+  Future<void> _loadAttendanceData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final attendanceProvider = Provider.of<AttendanceProvider>(
+        context,
+        listen: false,
+      );
+
+      // Load attendance data for the entire selected year
+      List<DateTime> allAttendedDates = [];
+
+      for (int month = 1; month <= 12; month++) {
+        final monthlyDates = await attendanceProvider.loadMonthAttendanceList(
+          _selectedYear,
+          month,
+        );
+        allAttendedDates.addAll(monthlyDates);
+      }
+
+      // Update the provider's attended dates
+      attendanceProvider.setAttendedDates(allAttendedDates);
+
+      // Then load yearly data
+      await _loadYearlyData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load attendance data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadYearlyData() async {
@@ -62,17 +105,18 @@ class _SummaryScreenState extends State<SummaryScreen> {
   List<int> _getAvailableYears() {
     const appStartYear = 2025;
     final currentYear = DateTime.now().year;
-    final currentMonth = DateTime.now().month;
 
     List<int> years = [];
 
-    // If we're in 2025 and haven't reached September yet, don't show any years
-    if (currentYear == 2025 && currentMonth < 9) {
-      return [];
-    }
-
+    // Always include current year for testing/development
+    // In production, you might want to keep the original logic
     for (int year = appStartYear; year <= currentYear; year++) {
       years.add(year);
+    }
+
+    // If no years available, at least show current year
+    if (years.isEmpty) {
+      years.add(currentYear);
     }
 
     return years.reversed.toList(); // Most recent first
@@ -154,7 +198,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _loadYearlyData,
+              onRefresh: _loadAttendanceData,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
@@ -451,10 +495,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
       builder: (context, attendanceProvider, child) {
         final attendedDates = attendanceProvider.attendedDates;
 
-        if (attendedDates.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
         return Card(
           elevation: 2,
           child: Padding(
@@ -471,7 +511,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '📊 Quarterly Stats',
+                      'Quarterly Stats',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -633,10 +673,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
       builder: (context, attendanceProvider, child) {
         final attendedDates = attendanceProvider.attendedDates;
 
-        if (attendedDates.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
         return FutureBuilder<List<Map<String, dynamic>>>(
           future: Future.wait([
             for (int month = 1; month <= 12; month++)
@@ -696,7 +732,45 @@ class _SummaryScreenState extends State<SummaryScreen> {
             }
 
             if (chartData.isEmpty) {
-              return const SizedBox.shrink();
+              return Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Monthly Attendance Percentage',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 180,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.bar_chart_outlined,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No attendance data for chart',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             }
 
             return Card(
@@ -777,10 +851,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
       builder: (context, attendanceProvider, child) {
         final attendedDates = attendanceProvider.attendedDates;
 
-        if (attendedDates.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
         return FutureBuilder<List<Map<String, dynamic>>>(
           future: Future.wait([
             for (int month = 1; month <= 12; month++)
@@ -827,7 +897,41 @@ class _SummaryScreenState extends State<SummaryScreen> {
             }
 
             if (monthlyData.isEmpty) {
-              return const SizedBox.shrink();
+              return Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Monthly Details',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.calendar_month_outlined,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No monthly data available',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             }
 
             return Card(

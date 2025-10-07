@@ -79,7 +79,7 @@ class _ProfileConfirmationScreenState extends State<ProfileConfirmationScreen> {
     if (_selectedOffice == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('⚠️ Please select your office location'),
+          content: const Text('Please select your office location'),
           backgroundColor: AppThemes.getErrorColor(context),
         ),
       );
@@ -212,7 +212,7 @@ class _ProfileConfirmationScreenState extends State<ProfileConfirmationScreen> {
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.location_on),
                 errorText: _selectedOffice == null
-                    ? '⚠️ Auto Check-In requires selecting your office'
+                    ? 'Auto Check-In requires selecting your office'
                     : null,
               ),
               items: _offices.map((office) {

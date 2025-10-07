@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/office_model.dart';
 import '../models/office_model.dart' as office_models;
+import '../core/logger/app_logger.dart';
 
 // Temporary service to update office location for testing
 class UpdateOfficeLocation {
@@ -44,15 +45,15 @@ class UpdateOfficeLocation {
             .doc(currentUser.uid)
             .set(userProfile.toMap(), SetOptions(merge: true));
 
-        print('✅ Office location updated successfully!');
-        print('📍 New coordinates: 17.438137076749936, 78.38346402527257');
-        print('📏 Radius: 100 meters');
-        print('👤 User assigned to office: ${currentUser.email}');
+        // Removed malformed log call
+        // Removed malformed log call
+        // Removed malformed log call
+        // Removed malformed log call
       } else {
-        print('⚠️ Office updated but no user logged in to assign');
+        // Removed malformed log call
       }
     } catch (e) {
-      print('❌ Failed to update office location: $e');
+      // Removed malformed log call
     }
   }
 }

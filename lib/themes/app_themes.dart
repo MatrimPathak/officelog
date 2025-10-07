@@ -4,6 +4,8 @@ class AppThemes {
   // Light Theme Colors
   static const Color lightPrimary = Color(0xFF1565C0);
   static const Color lightOnPrimary = Color(0xFFFFFFFF);
+  static const Color lightPrimaryContainer = Color(0xFFE3F2FD);
+  static const Color lightOnPrimaryContainer = Color(0xFF0D47A1);
   static const Color lightSecondary = Color(0xFF00897B);
   static const Color lightOnSecondary = Color(0xFFFFFFFF);
   static const Color lightBackground = Color(0xFFF6F7FB);
@@ -17,6 +19,8 @@ class AppThemes {
   // Dark Theme Colors
   static const Color darkPrimary = Color(0xFF4F8FEF);
   static const Color darkOnPrimary = Color(0xFFFFFFFF);
+  static const Color darkPrimaryContainer = Color(0xFF1A237E);
+  static const Color darkOnPrimaryContainer = Color(0xFFBBDEFB);
   static const Color darkSecondary = Color(0xFF4DB6A6);
   static const Color darkOnSecondary = Color(0xFFFFFFFF);
   static const Color darkBackground = Color(0xFF121212);
@@ -34,6 +38,8 @@ class AppThemes {
       colorScheme: const ColorScheme.light(
         primary: lightPrimary,
         onPrimary: lightOnPrimary,
+        primaryContainer: lightPrimaryContainer,
+        onPrimaryContainer: lightOnPrimaryContainer,
         secondary: lightSecondary,
         onSecondary: lightOnSecondary,
         surface: lightSurface,
@@ -71,6 +77,8 @@ class AppThemes {
       colorScheme: const ColorScheme.dark(
         primary: darkPrimary,
         onPrimary: darkOnPrimary,
+        primaryContainer: Color(0xFF1A237E),
+        onPrimaryContainer: Color(0xFFBBDEFB),
         secondary: darkSecondary,
         onSecondary: darkOnSecondary,
         surface: darkSurface,

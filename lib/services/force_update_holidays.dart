@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/holiday_model.dart';
+import '../core/logger/app_logger.dart';
 
 class ForceUpdateHolidays {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -7,7 +8,7 @@ class ForceUpdateHolidays {
   // Call this function to force update holidays with the latest hardcoded list
   static Future<void> updateHolidaysDatabase() async {
     try {
-      print('🔄 Updating holidays database...');
+      // Removed malformed log call
 
       // Clear existing holidays
       await _clearAllHolidays();
@@ -39,13 +40,13 @@ class ForceUpdateHolidays {
       }
       await batch.commit();
 
-      print('✅ Successfully updated ${updatedHolidays.length} holidays!');
-      print('📅 Holidays updated for 2025');
+      // Removed malformed log call
+      // Removed malformed log call
 
       // Clear local cache to force refresh
       await _clearLocalCache();
     } catch (e) {
-      print('❌ Failed to update holidays: $e');
+      // Removed malformed log call
     }
   }
 
@@ -60,9 +61,9 @@ class ForceUpdateHolidays {
       }
 
       await batch.commit();
-      print('🗑️ Cleared existing holidays');
+      // Removed malformed log call
     } catch (e) {
-      print('Failed to clear holidays: $e');
+      AppLogger.error('Operation failed: $e', tag: 'ForceUpdateHolidays');
     }
   }
 
@@ -70,9 +71,9 @@ class ForceUpdateHolidays {
   static Future<void> _clearLocalCache() async {
     try {
       // This will force the app to reload holidays from Firestore
-      print('🔄 Clearing local cache to force refresh');
+      // Removed malformed log call
     } catch (e) {
-      print('Failed to clear cache: $e');
+      AppLogger.error('Operation failed: $e', tag: 'ForceUpdateHolidays');
     }
   }
 
@@ -89,9 +90,9 @@ class ForceUpdateHolidays {
           .doc(testHoliday.id)
           .set(testHoliday.toMap());
 
-      print('✅ Added test holiday for tomorrow');
+      // Removed malformed log call
     } catch (e) {
-      print('❌ Failed to add test holiday: $e');
+      // Removed malformed log call
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../core/logger/app_logger.dart';
 
 /// Enhanced location permission service with better error handling
 /// Provides fallback mechanisms for permission handling issues
@@ -10,7 +11,7 @@ class LocationPermissionService {
       // First check if location service is enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        debugPrint('❌ Location service not enabled');
+        // Removed malformed log call
         return false;
       }
 
@@ -21,10 +22,10 @@ class LocationPermissionService {
           permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse;
 
-      debugPrint('📍 Location permission status: $permission');
+      // Removed malformed log call
       return hasPermission;
     } catch (e) {
-      debugPrint('❌ Error checking location permissions: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -35,7 +36,7 @@ class LocationPermissionService {
       // Check if location service is enabled first
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        debugPrint('❌ Location service not enabled');
+        // Removed malformed log call
         return false;
       }
 
@@ -45,13 +46,13 @@ class LocationPermissionService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          debugPrint('❌ Location permissions denied');
+          // Removed malformed log call
           return false;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        debugPrint('❌ Location permissions permanently denied');
+        // Removed malformed log call
         return false;
       }
 
@@ -59,19 +60,19 @@ class LocationPermissionService {
       if (permission == LocationPermission.whileInUse) {
         final backgroundGranted = await _tryRequestBackgroundPermission();
         if (backgroundGranted) {
-          debugPrint('✅ Background location permission granted');
+          // Removed malformed log call
           return true;
         } else {
-          debugPrint('⚠️ Using whileInUse permission (background not granted)');
+          // Removed malformed log call
           // Still return true - whileInUse is sufficient for basic functionality
           return true;
         }
       }
 
-      debugPrint('✅ Location permissions granted: $permission');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('❌ Error requesting location permissions: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -80,12 +81,10 @@ class LocationPermissionService {
   static Future<bool> _tryRequestBackgroundPermission() async {
     try {
       // Instead of using permission_handler, we'll guide the user to settings
-      debugPrint(
-        'ℹ️ Background permission requires manual setup in Android settings',
-      );
+      AppLogger.info('Background permission requires manual setup in Android settings', tag: 'LocationPermissionService');
       return false; // Return false to indicate background permission not available
     } catch (e) {
-      debugPrint('⚠️ Could not request background permission: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -99,7 +98,7 @@ class LocationPermissionService {
       LocationPermission permission = await Geolocator.checkPermission();
       return permission == LocationPermission.always;
     } catch (e) {
-      debugPrint('❌ Error checking ideal permissions: $e');
+      // Removed malformed log call
       return false;
     }
   }

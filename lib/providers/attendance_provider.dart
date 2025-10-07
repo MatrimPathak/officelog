@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../core/logger/app_logger.dart';
 import '../services/attendance_service.dart';
 import '../services/cache_service.dart';
 import '../services/holiday_service.dart';
@@ -386,6 +387,13 @@ class AttendanceProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set attended dates (for summary screen)
+  void setAttendedDates(List<DateTime> dates) {
+    _attendedDates = dates;
+    _updateTodayStatus();
+    notifyListeners();
+  }
+
   /// Reset provider state when user logs out/switches accounts
   void resetUserData() {
     _attendedDates.clear();
@@ -418,7 +426,10 @@ class AttendanceProvider with ChangeNotifier {
       // Reload current month after sync
       await loadCurrentMonthAttendance();
     } catch (e) {
-      print('Failed to sync offline data on start: $e');
+      AppLogger.error(
+        'Failed to sync offline data on start: $e',
+        tag: 'AttendanceProvider',
+      );
     }
   }
 
@@ -433,7 +444,10 @@ class AttendanceProvider with ChangeNotifier {
       }
     } catch (e) {
       // Silent fail for background sync
-      print('Background sync failed: $e');
+      AppLogger.warning(
+        'Background sync failed: $e',
+        tag: 'AttendanceProvider',
+      );
     }
   }
 
@@ -485,7 +499,7 @@ class AttendanceProvider with ChangeNotifier {
     try {
       return await _geolocationService.performAutoCheckIn();
     } catch (e) {
-      print('Auto check-in failed: $e');
+      AppLogger.error('Auto check-in failed: $e', tag: 'AttendanceProvider');
       return false;
     }
   }
@@ -513,7 +527,10 @@ class AttendanceProvider with ChangeNotifier {
     try {
       await NotificationService.setupDefaultReminder();
     } catch (e) {
-      print('Failed to setup notifications: $e');
+      AppLogger.error(
+        'Failed to setup notifications: $e',
+        tag: 'AttendanceProvider',
+      );
     }
   }
 
@@ -534,7 +551,10 @@ class AttendanceProvider with ChangeNotifier {
       // Sync offline data
       await syncOfflineDataOnStart();
     } catch (e) {
-      print('Failed to initialize services: $e');
+      AppLogger.error(
+        'Failed to initialize services: $e',
+        tag: 'AttendanceProvider',
+      );
     }
   }
 

@@ -435,7 +435,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   _autoCheckInStatus!['hasBackgroundPermission'] ==
                                   true;
                               return Text(
-                                'Location: ${isIdeal ? '✅' : '⚠️'} $status',
+                                'Location: $status',
                                 style: TextStyle(
                                   color: isIdeal ? null : Colors.orange,
                                 ),
@@ -477,7 +477,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '💡 For best reliability:',
+                                      'For best reliability:',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 12,
@@ -958,14 +958,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               SizedBox(height: 16),
               Text(
-                '📍 Location Permission:',
+                'Location Permission:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 4),
-              Text('• Already granted ✅'),
+              Text('• Already granted'),
               SizedBox(height: 12),
               Text(
-                '🔋 Battery Optimization:',
+                'Battery Optimization:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 4),
@@ -1128,8 +1128,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SnackBar(
             content: Text(
               isValid
-                  ? '✅ All settings are valid'
-                  : '⚠️ Some settings were corrected',
+                  ? 'All settings are valid'
+                  : 'Some settings were corrected',
             ),
             backgroundColor: isValid
                 ? AppThemes.getSuccessColor(context)
@@ -1224,7 +1224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('✅ All settings have been reset to defaults'),
+              content: const Text('All settings have been reset to defaults'),
               backgroundColor: AppThemes.getSuccessColor(context),
             ),
           );
@@ -1302,15 +1302,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 8),
                   Text(
                     result['withinRange']
-                        ? '✅ Within office range'
-                        : '❌ Outside office range',
+                        ? 'Within office range'
+                        : 'Outside office range',
                     style: TextStyle(
                       color: result['withinRange'] ? Colors.green : Colors.red,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   if (result['canAutoCheckIn'])
-                    const Text('\n🎯 Auto check-in available'),
+                    const Text('\nAuto check-in available'),
                 ] else
                   Text('Error: ${result['error']}'),
               ],

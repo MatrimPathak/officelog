@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/holiday_model.dart';
 import 'dart:convert';
+import '../core/logger/app_logger.dart';
 
 class HolidayService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -276,7 +277,7 @@ class HolidayService {
       // Clear cache to force refresh
       await _clearCache();
     } catch (e) {
-      print('Failed to initialize default holidays: $e');
+      AppLogger.error('Failed to initialize default holidays: $e', tag: 'HolidayService');
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import '../core/logger/app_logger.dart';
 
 /// Centralized service for managing all app settings persistence
 /// Ensures all user preferences are properly saved and restored
@@ -30,13 +31,13 @@ class SettingsPersistenceService {
       // Set first launch flag if not set
       if (!prefs.containsKey(_firstLaunchKey)) {
         await prefs.setBool(_firstLaunchKey, true);
-        debugPrint('✅ First launch detected - initializing default settings');
+        // Removed malformed log call
         await _setDefaultSettings();
       }
 
-      debugPrint('✅ SettingsPersistenceService initialized');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('❌ Failed to initialize SettingsPersistenceService: $e');
+      // Removed malformed log call
     }
   }
 
@@ -62,9 +63,9 @@ class SettingsPersistenceService {
       await prefs.setBool(_locationPermissionAskedKey, false);
       await prefs.setBool(_notificationPermissionAskedKey, false);
 
-      debugPrint('✅ Default settings applied');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('❌ Failed to set default settings: $e');
+      // Removed malformed log call
     }
   }
 
@@ -266,10 +267,10 @@ class SettingsPersistenceService {
         }
       }
 
-      debugPrint('✅ Settings imported successfully');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('❌ Failed to import settings: $e');
+      // Removed malformed log call
       return false;
     }
   }
@@ -280,9 +281,9 @@ class SettingsPersistenceService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       await _setDefaultSettings();
-      debugPrint('✅ All settings reset to defaults');
+      // Removed malformed log call
     } catch (e) {
-      debugPrint('❌ Failed to reset settings: $e');
+      // Removed malformed log call
     }
   }
 
@@ -303,11 +304,11 @@ class SettingsPersistenceService {
       for (final oldKey in oldKeys) {
         if (allKeys.contains(oldKey)) {
           await prefs.remove(oldKey);
-          debugPrint('🧹 Cleaned up old setting: $oldKey');
+          // Removed malformed log call
         }
       }
     } catch (e) {
-      debugPrint('❌ Failed to cleanup old settings: $e');
+      // Removed malformed log call
     }
   }
 
@@ -323,20 +324,20 @@ class SettingsPersistenceService {
           reminderTime.minute < 0 ||
           reminderTime.minute > 59) {
         await setReminderTime(const TimeOfDay(hour: 10, minute: 0));
-        debugPrint('⚠️ Fixed invalid reminder time');
+        // Removed malformed log call
       }
 
       // Validate theme mode
       final themeMode = settings['theme_mode'] as String;
       if (!['light', 'dark', 'system'].contains(themeMode)) {
         await setThemeMode('system');
-        debugPrint('⚠️ Fixed invalid theme mode');
+        // Removed malformed log call
       }
 
-      debugPrint('✅ Settings validation completed');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('❌ Settings validation failed: $e');
+      // Removed malformed log call
       return false;
     }
   }

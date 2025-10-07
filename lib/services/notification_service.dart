@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/attendance_service.dart';
 import '../utils/working_days_calculator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../core/logger/app_logger.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -64,7 +65,7 @@ class NotificationService {
 
       return true; // Assume granted for older Android versions
     } catch (e) {
-      debugPrint('Error requesting notification permissions: $e');
+      AppLogger.error('Error occurred: $e', tag: 'NotificationService');
       return true; // Don't block the user if we can't request
     }
   }
@@ -109,7 +110,7 @@ class NotificationService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
-      print('Failed to schedule daily reminder: $e');
+      AppLogger.error('Operation failed: $e', tag: 'NotificationService');
     }
   }
 
@@ -119,7 +120,7 @@ class NotificationService {
       await _notifications.cancel(_dailyNotificationId);
       await _setReminderEnabled(false);
     } catch (e) {
-      print('Failed to cancel daily reminder: $e');
+      AppLogger.error('Operation failed: $e', tag: 'NotificationService');
     }
   }
 
@@ -175,7 +176,7 @@ class NotificationService {
         ),
       );
     } catch (e) {
-      print('Failed to show notification: $e');
+      AppLogger.error('Operation failed: $e', tag: 'NotificationService');
     }
   }
 
@@ -226,7 +227,7 @@ class NotificationService {
         ),
       );
     } catch (e) {
-      print('Failed to show auto check-in notification: $e');
+      AppLogger.error('Operation failed: $e', tag: 'NotificationService');
     }
   }
 
@@ -281,7 +282,7 @@ class NotificationService {
         ),
       );
     } catch (e) {
-      print('Failed to show auto check-in failure notification: $e');
+      AppLogger.error('Operation failed: $e', tag: 'NotificationService');
     }
   }
 
@@ -313,7 +314,7 @@ class NotificationService {
   // Handle notification tap
   static void onNotificationTap(NotificationResponse response) {
     // Handle notification tap - could navigate to attendance screen
-    print('Notification tapped: ${response.payload}');
+    // Removed malformed log call
   }
 
   // Private helper methods
@@ -358,7 +359,7 @@ class NotificationService {
         await scheduleDailyReminder(hour: 10, minute: 0);
       }
     } catch (e) {
-      print('Failed to setup default reminder: $e');
+      AppLogger.error('Operation failed: $e', tag: 'NotificationService');
     }
   }
 
@@ -410,7 +411,7 @@ class NotificationService {
         await _sendComplianceReminderNotification(stillNeeded);
       }
     } catch (e) {
-      debugPrint('Failed to check compliance reminder: $e');
+      // Removed malformed log call
     }
   }
 
@@ -444,7 +445,7 @@ class NotificationService {
         ),
       );
     } catch (e) {
-      debugPrint('Failed to send compliance reminder notification: $e');
+      // Removed malformed log call
     }
   }
 

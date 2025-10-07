@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/logger/app_logger.dart';
 import '../services/office_service.dart';
 import '../services/attendance_service.dart';
 import '../services/notification_service.dart';
@@ -40,7 +41,7 @@ class GeolocationService {
       return permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always;
     } catch (e) {
-      print('Error requesting location permissions: $e');
+      AppLogger.error('Error requesting location permissions: $e', tag: 'GeolocationService');
       return false;
     }
   }
@@ -58,7 +59,7 @@ class GeolocationService {
         timeLimit: const Duration(seconds: 10),
       );
     } catch (e) {
-      print('Error getting current location: $e');
+      AppLogger.error('Error getting current location: $e', tag: 'GeolocationService');
       return null;
     }
   }
@@ -87,7 +88,7 @@ class GeolocationService {
 
       return distance <= office.radius;
     } catch (e) {
-      print('Error checking geofence: $e');
+      AppLogger.error('Error checking geofence: $e', tag: 'GeolocationService');
       return false;
     }
   }
@@ -138,7 +139,7 @@ class GeolocationService {
 
       return true;
     } catch (e) {
-      print('Error performing auto check-in: $e');
+      AppLogger.error('Error performing auto check-in: $e', tag: 'GeolocationService');
       return false;
     }
   }
@@ -155,9 +156,9 @@ class GeolocationService {
 
       // Note: For production, you might want to use a more sophisticated
       // background location service or WorkManager
-      print('Geofence monitoring started');
+      AppLogger.info('Geofence monitoring started', tag: 'GeolocationService');
     } catch (e) {
-      print('Error starting geofence monitoring: $e');
+      AppLogger.error('Error starting geofence monitoring: $e', tag: 'GeolocationService');
     }
   }
 
@@ -165,9 +166,9 @@ class GeolocationService {
   Future<void> stopGeofenceMonitoring() async {
     try {
       await _setGeofenceEnabled(false);
-      print('Geofence monitoring stopped');
+      AppLogger.info('Geofence monitoring stopped', tag: 'GeolocationService');
     } catch (e) {
-      print('Error stopping geofence monitoring: $e');
+      AppLogger.error('Error stopping geofence monitoring: $e', tag: 'GeolocationService');
     }
   }
 
@@ -286,7 +287,7 @@ class GeolocationService {
         DateTime.now().toIso8601String(),
       );
     } catch (e) {
-      print('Error recording auto check-in: $e');
+      AppLogger.error('Error recording auto check-in: $e', tag: 'GeolocationService');
     }
   }
 
@@ -295,7 +296,7 @@ class GeolocationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_geofenceEnabledKey, enabled);
     } catch (e) {
-      print('Error setting geofence enabled: $e');
+      AppLogger.error('Error setting geofence enabled: $e', tag: 'GeolocationService');
     }
   }
 

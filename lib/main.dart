@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
+import 'core/logger/app_logger.dart';
 import 'providers/auth_provider.dart';
 import 'providers/attendance_provider.dart';
 import 'providers/holiday_provider.dart';
@@ -27,6 +28,7 @@ import 'screens/admin_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/profile_confirmation_screen.dart';
 import 'screens/profile_screen.dart';
+import '../core/logger/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +37,7 @@ void main() async {
   try {
     await dotenv.load(fileName: "config.env");
   } catch (e) {
-    print('Warning: Could not load config.env file: $e');
+    AppLogger.warning('Could not load config.env file: $e', tag: 'Main');
   }
 
   // Initialize Hive for local storage
@@ -65,7 +67,10 @@ void main() async {
   if (await PersistentBackgroundService.isAutoCheckInEnabled()) {
     await PersistentBackgroundService.startAutoCheckIn();
     await SimpleBackgroundGeofenceService.startMonitoring();
-    print('✅ Auto check-in services restarted after app launch');
+    AppLogger.info(
+      'Auto check-in services restarted after app launch',
+      tag: 'Main',
+    );
   }
 
   // Initialize default data
@@ -73,6 +78,9 @@ void main() async {
 
   // Initialize admin configuration
   await AdminService.initializeAdminConfig();
+
+  // Initialize logging
+  AppLogger.info('OfficeLog app starting', tag: 'Main');
 
   runApp(const AttendanceApp());
 }
@@ -95,7 +103,7 @@ Future<void> _initializeDefaultData() async {
     // Force update holidays database (uncomment to update holidays)
     // await ForceUpdateHolidays.updateHolidaysDatabase();
   } catch (e) {
-    print('Failed to initialize default data: $e');
+    AppLogger.error('Failed to initialize default data: $e', tag: 'Main');
   }
 }
 
@@ -191,7 +199,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
       return userOffice == null;
     } catch (e) {
-      debugPrint('Error checking profile confirmation: $e');
+      AppLogger.error(
+        'Error checking profile confirmation: $e',
+        tag: 'AuthWrapper',
+      );
       return true; // Default to showing confirmation screen if there's an error
     }
   }

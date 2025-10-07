@@ -456,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(Icons.analytics, color: color, size: 24),
               const SizedBox(width: 12),
               Text(
-                '📊 Monthly Attendance',
+                'Monthly Attendance',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
@@ -522,12 +522,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                         ),
                         const SizedBox(width: 8),
-                        if (percentage >= 60)
-                          const Text('✅', style: TextStyle(fontSize: 16))
-                        else if (percentage >= 55)
-                          const Text('⚠️', style: TextStyle(fontSize: 16))
-                        else
-                          const Text('❌', style: TextStyle(fontSize: 16)),
+                        Icon(
+                          percentage >= 60
+                              ? Icons.check_circle
+                              : percentage >= 55
+                                  ? Icons.warning
+                                  : Icons.error,
+                          color: color,
+                          size: 16,
+                        ),
                       ],
                     ),
                   ],

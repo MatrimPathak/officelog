@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/logger/app_logger.dart';
 
 class CacheService {
   static const String _attendanceKey = 'attendance_data';
@@ -160,7 +161,7 @@ class CacheService {
       await _updateSyncTimestamp();
     } catch (e) {
       // If Firestore fails, at least we have local cache
-      print('Failed to sync to Firestore: $e');
+      AppLogger.error('Failed to sync to Firestore: $e', tag: 'CacheService');
     }
   }
 
@@ -190,7 +191,7 @@ class CacheService {
       // If no local data, try Firestore
       return await _getFromFirestore(userId, year, month);
     } catch (e) {
-      print('Failed to get attendance data: $e');
+      AppLogger.error('Failed to get attendance data: $e', tag: 'CacheService');
       return null;
     }
   }
@@ -261,7 +262,7 @@ class CacheService {
 
       return dates;
     } catch (e) {
-      print('Failed to get from Firestore: $e');
+      AppLogger.error('Failed to get from Firestore: $e', tag: 'CacheService');
       return null;
     }
   }
@@ -338,7 +339,7 @@ class CacheService {
       // Clear offline data after successful sync
       await _clearOfflineData(userId);
     } catch (e) {
-      print('Failed to sync offline data: $e');
+      AppLogger.error('Failed to sync offline data: $e', tag: 'CacheService');
     }
   }
 
@@ -395,7 +396,7 @@ class CacheService {
       // Update sync timestamp
       await _updateSyncTimestamp();
     } catch (e) {
-      print('Failed to delete attendance from cache: $e');
+      AppLogger.error('Failed to delete attendance from cache: $e', tag: 'CacheService');
     }
   }
 
@@ -419,7 +420,7 @@ class CacheService {
           .doc(dayKey)
           .delete();
     } catch (e) {
-      print('Failed to delete from Firestore cache: $e');
+      AppLogger.error('Failed to delete from Firestore cache: $e', tag: 'CacheService');
     }
   }
 
@@ -442,7 +443,7 @@ class CacheService {
 
       await _updateSyncTimestamp();
     } catch (e) {
-      print('Failed to force sync: $e');
+      AppLogger.error('Failed to force sync: $e', tag: 'CacheService');
     }
   }
 }

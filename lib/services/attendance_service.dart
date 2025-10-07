@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/logger/app_logger.dart';
 import '../utils/working_days_calculator.dart';
 import '../models/attendance_model.dart';
 import 'dart:convert';
@@ -328,7 +329,10 @@ class AttendanceService {
       // Save back to preferences
       await prefs.setString(offlineDataKey, json.encode(offlineList));
     } catch (e) {
-      print('Failed to save offline attendance: $e');
+      AppLogger.error(
+        'Failed to save offline attendance: $e',
+        tag: 'AttendanceService',
+      );
     }
   }
 
@@ -346,7 +350,10 @@ class AttendanceService {
           .map((map) => AttendanceModel.fromMap(map.cast<String, dynamic>()))
           .toList();
     } catch (e) {
-      print('Failed to get offline attendance: $e');
+      AppLogger.error(
+        'Failed to get offline attendance: $e',
+        tag: 'AttendanceService',
+      );
       return [];
     }
   }
@@ -385,7 +392,10 @@ class AttendanceService {
       // Clear offline data after successful sync
       await _clearOfflineAttendance(userId);
     } catch (e) {
-      print('Failed to sync offline attendance: $e');
+      AppLogger.error(
+        'Failed to sync offline attendance: $e',
+        tag: 'AttendanceService',
+      );
       throw Exception('Failed to sync offline attendance: $e');
     }
   }
@@ -397,7 +407,10 @@ class AttendanceService {
       final offlineDataKey = '${_offlineAttendanceKey}_$userId';
       await prefs.remove(offlineDataKey);
     } catch (e) {
-      print('Failed to clear offline attendance: $e');
+      AppLogger.error(
+        'Failed to clear offline attendance: $e',
+        tag: 'AttendanceService',
+      );
     }
   }
 
@@ -444,7 +457,10 @@ class AttendanceService {
 
       return combined;
     } catch (e) {
-      print('Failed to get combined attendance: $e');
+      AppLogger.error(
+        'Failed to get combined attendance: $e',
+        tag: 'AttendanceService',
+      );
       return await getMonthlyAttendance(userId, year, month);
     }
   }

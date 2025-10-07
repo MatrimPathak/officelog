@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../core/logger/app_logger.dart';
 
 /// Service to handle admin user verification and admin-related operations
 class AdminService {
@@ -21,7 +22,7 @@ class AdminService {
 
       return await isUserAdmin(user.uid, user.email);
     } catch (e) {
-      debugPrint('Error checking admin status: $e');
+      AppLogger.error('Error occurred: $e', tag: 'AdminService');
       return false;
     }
   }
@@ -59,7 +60,7 @@ class AdminService {
 
       return false;
     } catch (e) {
-      debugPrint('Error checking admin status from Firebase: $e');
+      AppLogger.error('Error occurred: $e', tag: 'AdminService');
 
       // Fallback to hardcoded check if Firebase fails
       if (email != null &&
@@ -75,7 +76,7 @@ class AdminService {
   static Future<bool> addAdminUser(String userId, String email) async {
     try {
       if (!await isCurrentUserAdmin()) {
-        debugPrint('Current user is not admin - cannot add admin users');
+        // Removed malformed log call
         return false;
       }
 
@@ -90,10 +91,10 @@ class AdminService {
         'updated_by': FirebaseAuth.instance.currentUser?.uid,
       }, SetOptions(merge: true));
 
-      debugPrint('Successfully added admin user: $email');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('Error adding admin user: $e');
+      AppLogger.error('Error occurred: $e', tag: 'AdminService');
       return false;
     }
   }
@@ -102,13 +103,13 @@ class AdminService {
   static Future<bool> removeAdminUser(String userId, String email) async {
     try {
       if (!await isCurrentUserAdmin()) {
-        debugPrint('Current user is not admin - cannot remove admin users');
+        // Removed malformed log call
         return false;
       }
 
       // Prevent removing hardcoded admins
       if (_hardcodedAdminEmails.contains(email.toLowerCase())) {
-        debugPrint('Cannot remove hardcoded admin: $email');
+        // Removed malformed log call
         return false;
       }
 
@@ -123,10 +124,10 @@ class AdminService {
         'updated_by': FirebaseAuth.instance.currentUser?.uid,
       });
 
-      debugPrint('Successfully removed admin user: $email');
+      // Removed malformed log call
       return true;
     } catch (e) {
-      debugPrint('Error removing admin user: $e');
+      AppLogger.error('Error occurred: $e', tag: 'AdminService');
       return false;
     }
   }
@@ -172,7 +173,7 @@ class AdminService {
 
       return adminUsers;
     } catch (e) {
-      debugPrint('Error getting admin users: $e');
+      AppLogger.error('Error occurred: $e', tag: 'AdminService');
       return [];
     }
   }
@@ -204,10 +205,10 @@ class AdminService {
           'version': '1.0',
         });
 
-        debugPrint('Initialized admin configuration');
+        // Removed malformed log call
       }
     } catch (e) {
-      debugPrint('Error initializing admin config: $e');
+      AppLogger.error('Error occurred: $e', tag: 'AdminService');
     }
   }
 }
