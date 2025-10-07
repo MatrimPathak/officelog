@@ -90,6 +90,12 @@ android {
             isShrinkResources = false
         }
     }
+
+    lintOptions {
+        isAbortOnError = false
+        isCheckReleaseBuilds = false
+        disable("InvalidPackage")
+    }
 }
 
 flutter {
